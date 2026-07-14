@@ -13,6 +13,7 @@
             --primary: #1e3a5f;
             --secondary: #007bff;
             --success: #28a745;
+            --warning: #ffc107;
             --danger: #dc3545;
             --bg: #f8f9fa;
             --border: #ced4da;
@@ -26,7 +27,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 0 auto;
         }
         h1 {
@@ -105,6 +106,12 @@
             height: 38px;
         }
         .btn-add:hover { background-color: #218838; }
+        .btn-load {
+            background-color: var(--warning);
+            color: #333;
+            height: 38px;
+        }
+        .btn-load:hover { background-color: #e0a800; }
         .btn-generate {
             background-color: var(--secondary);
             color: white;
@@ -127,18 +134,37 @@
             border-collapse: collapse;
             margin-top: 10px;
             background: #fff;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
         }
         th, td {
             border: 1px solid var(--border);
-            padding: 10px;
+            padding: 8px;
             text-align: left;
+            vertical-align: middle;
         }
         th {
             background-color: var(--primary);
             color: white;
             font-weight: 600;
         }
+        /* Inputs dentro da tabela */
+        td input {
+            padding: 6px;
+            font-size: 0.9rem;
+            margin-bottom: 0;
+            border: 1px solid transparent;
+            background-color: transparent;
+            border-bottom: 1px dashed #aaa;
+            border-radius: 0;
+        }
+        td input:focus {
+            background-color: #fff;
+            border: 1px solid var(--secondary);
+        }
+        .input-code { width: 100px; font-weight: bold; color: var(--primary); }
+        .input-qtd { width: 60px; text-align: center; }
+        .input-calc { width: 140px; }
+        
         tbody tr:nth-child(even) {
             background-color: #f8f9fa;
         }
@@ -154,16 +180,25 @@
         .hidden {
             display: none !important;
         }
+        .template-section {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1><i class="fas fa-file-excel"></i> Gerador de Lista de Perfis - Modelo CEM</h1>
+    <h1><i class="fas fa-file-excel"></i> Gerador de Lista de Perfis - Padrão CEM</h1>
 
     <!-- DADOS DO PROJETO -->
     <div class="card">
-        <h2>Dados do Projeto (Cabeçalho da Planilha)</h2>
+        <h2>Dados do Projeto</h2>
         <div class="grid-project">
             <div class="form-group">
                 <label>CÓDIGO (Projeto):</label>
@@ -171,7 +206,7 @@
             </div>
             <div class="form-group">
                 <label>DESCRIÇÃO:</label>
-                <input type="text" id="proj_desc" placeholder="Ex: Janela Maximar Sala">
+                <input type="text" id="proj_desc" placeholder="Ex: Janela de Correr 2 Folhas">
             </div>
             <div class="form-group">
                 <label>PROJETISTA:</label>
@@ -184,95 +219,64 @@
         </div>
     </div>
 
-    <!-- ADICIONAR ITENS -->
+    <!-- CARREGAR TEMPLATE -->
     <div class="card">
-        <h2>Adicionar Item a partir do CAD</h2>
-        <form id="formAdicionarItem" onsubmit="event.preventDefault(); adicionarItem();">
+        <h2>Adicionar Itens</h2>
+        
+        <div class="template-section">
+            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                <label>Carregar Tipologia Base (Opcional):</label>
+                <select id="modelo_base">
+                    <option value="">Selecione um modelo para pré-preencher a lista...</option>
+                    <option value="janela_correr_2f">Janela de Correr (2 Folhas)</option>
+                    <option value="janela_correr_4f">Janela de Correr (4 Folhas)</option>
+                    <option value="maximar">Janela Maxim-ar</option>
+                    <option value="porta_giro">Porta de Giro</option>
+                </select>
+            </div>
+            <button type="button" class="btn btn-load" onclick="carregarModelo()"><i class="fas fa-magic"></i> Carregar Estrutura</button>
+        </div>
+
+        <p style="text-align: center; margin: 10px 0; color: #777; font-size: 0.9em;">- OU ADICIONE UM ITEM MANUALMENTE -</p>
+
+        <form id="formAdicionarItem" onsubmit="event.preventDefault(); adicionarItemManual();">
             <div class="grid-item-form">
-                
                 <div class="form-group">
                     <label>Material</label>
                     <select id="item_material" onchange="toggleCamposMaterial()">
-                        <option value="Perfil">Perfil de Alumínio</option>
+                        <option value="Perfil">Perfil</option>
                         <option value="Vidro">Vidro</option>
+                        <option value="Acessório">Acessório</option>
                     </select>
                 </div>
-
-                <div class="form-group" id="container_categoria">
-                    <label>Categoria do Perfil</label>
-                    <input type="text" id="item_categoria" placeholder="Ex: Contramarco, Marco, Folha..." list="lista-categorias">
-                    <datalist id="lista-categorias">
-                        <option value="Contramarco">
-                        <option value="Marco">
-                        <option value="Folha">
-                        <option value="Arremate">
-                        <option value="Mão de Amigo">
-                        <option value="Baguete">
-                        <option value="Travessa">
-                    </datalist>
-                </div>
-
                 <div class="form-group">
-                    <label>Código / Nome</label>
-                    <input type="text" id="item_codigo" placeholder="Ex: CM200, SU001..." required>
+                    <label>Categoria/Local</label>
+                    <input type="text" id="item_categoria" placeholder="Ex: Marco Superior..." required>
                 </div>
-
                 <div class="form-group">
-                    <label>Qtd.</label>
-                    <input type="number" id="item_qtd" placeholder="Ex: 2" min="1" required>
-                </div>
-
-                <div class="form-group" id="container_comprimento">
-                    <label>Comprimento (Cálculo/Desconto)</label>
-                    <input type="text" id="item_comprimento" placeholder="Ex: L + 24 ou 1500">
-                </div>
-
-                <div class="form-group hidden" id="container_largura">
-                    <label>Largura (L) do Vidro</label>
-                    <input type="text" id="item_largura" placeholder="Ex: L - 100">
-                </div>
-
-                <div class="form-group hidden" id="container_altura">
-                    <label>Altura (H) do Vidro</label>
-                    <input type="text" id="item_altura" placeholder="Ex: H - 150">
-                </div>
-
-                <div class="form-group">
-                    <label>Espessura</label>
-                    <input type="text" id="item_espessura" placeholder="Ex: 6mm">
-                </div>
-
-                <div class="form-group">
-                    <button type="submit" class="btn btn-add"><i class="fas fa-plus"></i> Adicionar</button>
-                </div>
-            </div>
-            <div class="grid-item-form" style="margin-top: 10px; grid-template-columns: 1fr;">
-                <div class="form-group">
-                    <label>Observação (Opcional)</label>
-                    <input type="text" id="item_obs" placeholder="Anotações para este item...">
+                    <button type="submit" class="btn btn-add"><i class="fas fa-plus"></i> Adicionar Linha Vazia</button>
                 </div>
             </div>
         </form>
     </div>
 
-    <!-- LISTA DE ITENS -->
+    <!-- LISTA DE ITENS EDITÁVEL -->
     <div class="card" style="overflow-x: auto;">
-        <h2>Lista de Perfis e Vidros Selecionados</h2>
+        <h2>Lista de Perfis (Edite os valores diretamente na tabela)</h2>
         <table id="tabelaItens">
             <thead>
                 <tr>
                     <th>Material</th>
                     <th>Categoria</th>
-                    <th>Código</th>
-                    <th>Qtd</th>
-                    <th>Comp. / Cálculo</th>
-                    <th>Medidas Vidro (L x H)</th>
+                    <th>Qtd.</th>
+                    <th>Código do Perfil</th>
+                    <th>Cálculo / Medida</th>
                     <th>Espessura</th>
                     <th>Ação</th>
                 </tr>
             </thead>
             <tbody id="tbodyItens">
-                <tr><td colspan="8" class="empty-state">Nenhum item adicionado ainda. Analise o CAD e comece a inserir acima!</td></tr>
+                <tr><td colspan="7" class="empty-state">Selecione uma Tipologia Base acima ou adicione itens manualmente.</td></tr>
             </tbody>
         </table>
     </div>
@@ -282,50 +286,112 @@
 
 <script>
     let listaDeItens = [];
+    let idCounter = 0;
 
-    // Alternar campos dependendo se é Perfil ou Vidro
-    function toggleCamposMaterial() {
-        const material = document.getElementById("item_material").value;
-        const c_categoria = document.getElementById("container_categoria");
-        const c_comprimento = document.getElementById("container_comprimento");
-        const c_largura = document.getElementById("container_largura");
-        const c_altura = document.getElementById("container_altura");
+    // Dicionário de templates (estruturas base)
+    const templates = {
+        'janela_correr_2f': [
+            { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', esp: '' },
+            { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', esp: '' },
+            { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+48', esp: '' },
+            { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+48', esp: '' },
+            { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU002', calc: 'L-26', esp: '' },
+            { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU001', calc: 'L-26', esp: '' },
+            { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: '', calc: 'H', esp: '' },
+            { mat: 'Perfil', cat: 'Mata Junta', qtd: 2, cod: 'SU302', calc: 'H', esp: '' },
+            { mat: 'Perfil', cat: 'Folha Sup/Inf', qtd: 4, cod: 'SU053', calc: '((L-131)/2)', esp: '' },
+            { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', esp: '' },
+            { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 1, cod: 'SU040', calc: 'H-50', esp: '' },
+            { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 1, cod: 'SU041', calc: 'H-50', esp: '' },
+            { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 4, cod: 'SU102', calc: '((L-131)/2)', esp: '' },
+            { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 4, cod: 'SU102', calc: 'H-152', esp: '' },
+            { mat: 'Vidro', cat: 'Vidro', qtd: 2, cod: 'Vidro Incolor', calc: 'L:   x H:  ', esp: '6mm' }
+        ],
+        'janela_correr_4f': [
+            { mat: 'Perfil', cat: 'Marco Sup. / Inf.', qtd: 2, cod: '', calc: 'L', esp: '' },
+            { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: '', calc: 'H', esp: '' },
+            { mat: 'Perfil', cat: 'Montante Lateral', qtd: 2, cod: '', calc: 'H - ', esp: '' },
+            { mat: 'Perfil', cat: 'Montante Central', qtd: 2, cod: '', calc: 'H - ', esp: '' },
+            { mat: 'Perfil', cat: 'Mão de Amigo', qtd: 4, cod: '', calc: 'H - ', esp: '' },
+            { mat: 'Perfil', cat: 'Travessa (Folha)', qtd: 8, cod: '', calc: '(L/4) - ', esp: '' },
+            { mat: 'Vidro', cat: 'Vidro', qtd: 4, cod: 'Vidro Incolor', calc: 'L:   x H:  ', esp: '6mm' }
+        ],
+        'maximar': [
+            { mat: 'Perfil', cat: 'Marco (L)', qtd: 2, cod: '', calc: 'L', esp: '' },
+            { mat: 'Perfil', cat: 'Marco (H)', qtd: 2, cod: '', calc: 'H', esp: '' },
+            { mat: 'Perfil', cat: 'Folha (L)', qtd: 2, cod: '', calc: 'L - ', esp: '' },
+            { mat: 'Perfil', cat: 'Folha (H)', qtd: 2, cod: '', calc: 'H - ', esp: '' },
+            { mat: 'Perfil', cat: 'Baguete (L)', qtd: 2, cod: '', calc: '', esp: '' },
+            { mat: 'Perfil', cat: 'Baguete (H)', qtd: 2, cod: '', calc: '', esp: '' },
+            { mat: 'Vidro', cat: 'Vidro', qtd: 1, cod: 'Vidro Incolor', calc: 'L:   x H:  ', esp: '6mm' }
+        ],
+        'porta_giro': [
+            { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: '', calc: 'H', esp: '' },
+            { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: '', calc: 'L', esp: '' },
+            { mat: 'Perfil', cat: 'Montante (Folha)', qtd: 2, cod: '', calc: 'H - ', esp: '' },
+            { mat: 'Perfil', cat: 'Travessa Sup/Inf', qtd: 2, cod: '', calc: 'L - ', esp: '' },
+            { mat: 'Perfil', cat: 'Baguete', qtd: 4, cod: '', calc: '', esp: '' },
+            { mat: 'Vidro', cat: 'Vidro', qtd: 1, cod: 'Vidro Incolor', calc: 'L:   x H:  ', esp: '6mm' }
+        ]
+    };
 
-        if (material === "Perfil") {
-            c_categoria.classList.remove("hidden");
-            c_comprimento.classList.remove("hidden");
-            c_largura.classList.add("hidden");
-            c_altura.classList.add("hidden");
-        } else {
-            c_categoria.classList.add("hidden");
-            c_comprimento.classList.add("hidden");
-            c_largura.classList.remove("hidden");
-            c_altura.classList.remove("hidden");
+    function carregarModelo() {
+        const modeloId = document.getElementById("modelo_base").value;
+        if (!modeloId) {
+            alert("Selecione um modelo na lista primeiro.");
+            return;
         }
+
+        const template = templates[modeloId];
+        
+        // Pergunta se deseja limpar a lista atual se houver itens
+        if (listaDeItens.length > 0) {
+            if (!confirm("Isso vai adicionar os itens do modelo à sua lista atual. Deseja continuar?")) {
+                return;
+            }
+        }
+
+        template.forEach(item => {
+            idCounter++;
+            listaDeItens.push({
+                id: idCounter,
+                material: item.mat,
+                categoria: item.cat,
+                qtd: item.qtd,
+                codigo: item.cod,
+                calculo: item.calc,
+                espessura: item.esp
+            });
+        });
+
+        atualizarTabela();
+        document.getElementById("modelo_base").value = ""; // reseta o select
     }
 
-    function adicionarItem() {
-        const material = document.getElementById("item_material").value;
+    function adicionarItemManual() {
+        const mat = document.getElementById("item_material").value;
+        const cat = document.getElementById("item_categoria").value;
         
-        const novoItem = {
-            id: Date.now(),
-            material: material,
-            categoria: material === "Perfil" ? document.getElementById("item_categoria").value : "-",
-            codigo: document.getElementById("item_codigo").value,
-            qtd: document.getElementById("item_qtd").value,
-            comprimento: material === "Perfil" ? document.getElementById("item_comprimento").value : "-",
-            largura: material === "Vidro" ? document.getElementById("item_largura").value : "-",
-            altura: material === "Vidro" ? document.getElementById("item_altura").value : "-",
-            espessura: document.getElementById("item_espessura").value,
-            obs: document.getElementById("item_obs").value
-        };
+        idCounter++;
+        listaDeItens.push({
+            id: idCounter,
+            material: mat,
+            categoria: cat,
+            qtd: 1,
+            codigo: '',
+            calculo: '',
+            espessura: mat === 'Vidro' ? '6mm' : ''
+        });
 
-        listaDeItens.push(novoItem);
         atualizarTabela();
-        limparFormularioItem();
-        
-        // Focar no código para facilitar adição rápida
-        document.getElementById("item_codigo").focus();
+        document.getElementById("item_categoria").value = "";
+    }
+
+    function atualizarCampo(id, campo, valor) {
+        const index = listaDeItens.findIndex(item => item.id === id);
+        if (index !== -1) {
+            listaDeItens[index][campo] = valor;
+        }
     }
 
     function removerItem(id) {
@@ -338,50 +404,50 @@
         tbody.innerHTML = "";
 
         if (listaDeItens.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Nenhum item adicionado ainda. Analise o CAD e comece a inserir acima!</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Selecione uma Tipologia Base acima ou adicione itens manualmente.</td></tr>';
             return;
         }
 
         listaDeItens.forEach(item => {
             const tr = document.createElement("tr");
             
-            let htmlMedidasVidro = "-";
-            if (item.material === "Vidro") {
-                htmlMedidasVidro = `${item.largura} x ${item.altura}`;
-            }
+            // Icones visuais por material
+            let matIcon = '<i class="fas fa-bars" style="color:#555"></i> ';
+            if(item.material === 'Vidro') matIcon = '<i class="fas fa-border-all" style="color:#0dcaf0"></i> ';
+            if(item.material === 'Acessório') matIcon = '<i class="fas fa-cogs" style="color:#fd7e14"></i> ';
 
             tr.innerHTML = `
-                <td><b>${item.material}</b></td>
-                <td>${item.categoria}</td>
-                <td>${item.codigo}</td>
-                <td>${item.qtd}</td>
-                <td>${item.comprimento}</td>
-                <td>${htmlMedidasVidro}</td>
-                <td>${item.espessura}</td>
-                <td><button class="btn btn-remove" onclick="removerItem(${item.id})"><i class="fas fa-trash"></i> Excluir</button></td>
+                <td>${matIcon} <b>${item.material}</b></td>
+                <td>
+                    <input type="text" value="${item.categoria}" onchange="atualizarCampo(${item.id}, 'categoria', this.value)" placeholder="Categoria">
+                </td>
+                <td>
+                    <input type="number" class="input-qtd" value="${item.qtd}" min="1" onchange="atualizarCampo(${item.id}, 'qtd', this.value)">
+                </td>
+                <td>
+                    <input type="text" class="input-code" value="${item.codigo}" onchange="atualizarCampo(${item.id}, 'codigo', this.value)" placeholder="Ex: SU001">
+                </td>
+                <td>
+                    <input type="text" class="input-calc" value="${item.calculo}" onchange="atualizarCampo(${item.id}, 'calculo', this.value)" placeholder="Ex: L - 24">
+                </td>
+                <td>
+                    <input type="text" value="${item.espessura}" onchange="atualizarCampo(${item.id}, 'espessura', this.value)" placeholder="Espessura" style="width: 80px;">
+                </td>
+                <td>
+                    <button class="btn btn-remove" onclick="removerItem(${item.id})"><i class="fas fa-trash"></i></button>
+                </td>
             `;
             tbody.appendChild(tr);
         });
     }
 
-    function limparFormularioItem() {
-        document.getElementById("item_codigo").value = "";
-        document.getElementById("item_qtd").value = "";
-        document.getElementById("item_comprimento").value = "";
-        document.getElementById("item_largura").value = "";
-        document.getElementById("item_altura").value = "";
-        // Não limpamos categoria ou espessura pois podem ser repetidas na sequencia (ex: adicionar varios marcos iguais com cortes diferentes)
-        document.getElementById("item_obs").value = "";
-    }
-
     function gerarExcel() {
         if (listaDeItens.length === 0) {
-            alert("A lista está vazia! Adicione itens antes de gerar a planilha.");
+            alert("A lista está vazia!");
             return;
         }
 
-        // 1. Cabeçalho IDÊNTICO ao "Modelo CEM"
-        // Linhas de 1 a 6 do modelo CEM
+        // Cabeçalho Padrão CEM
         const data = [
             ["CÓDIGO:", document.getElementById("proj_codigo").value || "-", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["DESCRIÇÃO:", document.getElementById("proj_desc").value || "-", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
@@ -391,59 +457,40 @@
             ['MATERIAL', 'REFERÊNCIA', 'CÓDIGO', 'CATEGORIA', 'L / H', 'CORTE', 'CÓD. USINAGEM', 'FASE', 'DESCRIÇÃO', 'COR', 'COMPRIMENTO', 'QTD.', 'L', 'H', 'OBSERVAÇÃO', 'CONDIÇÃO', 'kg/m ou kg/m2', 'Espessura']
         ];
 
-        // 2. Preenchendo as linhas conforme a necessidade
         listaDeItens.forEach(item => {
-            // Inicializar array da linha com strings vazias (18 colunas)
             let row = new Array(18).fill("");
             
-            // Coluna 0: MATERIAL
-            row[0] = item.material;
+            row[0] = item.material; // MATERIAL
+            row[2] = item.codigo;   // CÓDIGO (Referência)
+            row[3] = item.categoria;// CATEGORIA
+            row[11] = item.qtd;     // QTD.
+            row[17] = item.espessura;// Espessura
             
-            // Coluna 2: CÓDIGO (Referência do Perfil/Vidro)
-            row[2] = item.codigo;
-            
-            if (item.material === "Perfil") {
-                // Coluna 3: CATEGORIA (Marco, Contramarco, etc)
-                row[3] = item.categoria;
-                // Coluna 10: COMPRIMENTO (Fórmula de desconto: L+24, etc)
-                row[10] = item.comprimento;
-            } else if (item.material === "Vidro") {
-                // Coluna 3: CATEGORIA para vidro
-                row[3] = "Vidro";
-                // Coluna 12: L (Largura do Vidro)
-                row[12] = item.largura;
-                // Coluna 13: H (Altura do Vidro)
-                row[13] = item.altura;
+            // Tratamento da coluna de medidas (Comprimento para perfil, L e H para Vidro)
+            if (item.material === "Vidro" && item.calculo.includes("x")) {
+                // Tenta extrair L e H se o usuário preencheu no formato "L: 100 x H: 200" ou "100 x 200"
+                let partes = item.calculo.split("x");
+                row[12] = partes[0].replace(/L:/g, "").trim(); // L
+                row[13] = partes[1].replace(/H:/g, "").trim(); // H
+            } else {
+                row[10] = item.calculo; // COMPRIMENTO
             }
-            
-            // Coluna 11: QTD.
-            row[11] = item.qtd;
-            
-            // Coluna 14: OBSERVAÇÃO
-            row[14] = item.obs;
-            
-            // Coluna 17: Espessura
-            row[17] = item.espessura;
             
             data.push(row);
         });
 
-        // 3. Gerando o arquivo XLSX
         const ws = XLSX.utils.aoa_to_sheet(data);
-        
-        // Ajuste básico de largura de colunas para Excel
         const wscols = [
-            {wch: 15}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 10}, 
+            {wch: 15}, {wch: 15}, {wch: 15}, {wch: 20}, {wch: 10}, 
             {wch: 10}, {wch: 15}, {wch: 10}, {wch: 20}, {wch: 10}, 
-            {wch: 15}, {wch: 8},  {wch: 12}, {wch: 12}, {wch: 25}, 
+            {wch: 20}, {wch: 8},  {wch: 12}, {wch: 12}, {wch: 25}, 
             {wch: 10}, {wch: 15}, {wch: 10}
         ];
         ws['!cols'] = wscols;
 
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+        XLSX.utils.book_append_sheet(wb, ws, "Esquadria");
         
-        // Nome de arquivo com o código do projeto, se houver
         let filename = "Calculo_Perfis_CEM";
         const codProj = document.getElementById("proj_codigo").value;
         if(codProj) { filename += "_" + codProj; }
@@ -451,9 +498,6 @@
 
         XLSX.writeFile(wb, filename);
     }
-
-    // Disparar o toggle inicial para ajustar a tela
-    toggleCamposMaterial();
 </script>
 
 </body>
