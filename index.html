@@ -78,15 +78,16 @@
             font-weight: 600;
             font-size: 0.85rem;
             color: #555;
+            white-space: nowrap; /* Evita quebra de linha na label */
         }
         input, select {
             width: 100%;
-            padding: 12px; /* Maior para toque na tela */
+            padding: 12px;
             border: 1px solid var(--border);
             border-radius: 6px;
             box-sizing: border-box;
             font-family: inherit;
-            font-size: 16px; /* Evita zoom automático no iOS */
+            font-size: 16px;
             background-color: #fcfcfc;
         }
         input:focus, select:focus {
@@ -106,23 +107,11 @@
             gap: 10px;
             border: 1px solid #e9ecef;
         }
-        @media (min-width: 600px) {
-            .template-section {
-                flex-direction: row;
-                align-items: flex-end;
-            }
-        }
 
         .grid-item-form {
             display: grid;
             grid-template-columns: 1fr;
             gap: 10px;
-        }
-        @media (min-width: 600px) {
-            .grid-item-form {
-                grid-template-columns: 1fr 2fr auto;
-                align-items: end;
-            }
         }
 
         .btn {
@@ -159,6 +148,28 @@
             padding: 10px;
             font-size: 1.2rem;
             width: auto;
+        }
+
+        /* AJUSTES PARA DESKTOP (Navegador) */
+        @media (min-width: 600px) {
+            .template-section {
+                flex-direction: row;
+                align-items: flex-end;
+            }
+            .grid-item-form {
+                grid-template-columns: 1fr 2fr auto;
+                align-items: end;
+            }
+            /* Conserta o botão espremendo o campo de seleção no PC */
+            .template-section .btn-load,
+            .grid-item-form .btn-add {
+                width: auto;
+                white-space: nowrap;
+            }
+            .form-group-flex {
+                flex: 1;
+                min-width: 250px;
+            }
         }
         
         /* Estilos da Tabela Responsiva (Estilo "Card" no Mobile) */
@@ -322,7 +333,7 @@
         <h2>Adicionar Itens</h2>
         
         <div class="template-section">
-            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+            <div class="form-group form-group-flex" style="margin-bottom: 0;">
                 <label>Carregar Tipologia Base (Opcional):</label>
                 <select id="modelo_base">
                     <option value="">Selecione um modelo pronto...</option>
