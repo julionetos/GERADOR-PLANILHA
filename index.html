@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gerador de Lista de Perfis - Padrão CEM</title>
     <!-- Biblioteca SheetJS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -15,16 +15,16 @@
             --success: #28a745;
             --warning: #ffc107;
             --danger: #dc3545;
-            --bg: #f8f9fa;
+            --bg: #f4f7f6;
             --border: #ced4da;
             --text: #333;
         }
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
-            padding: 20px;
+            padding: 15px 10px;
         }
         .container {
             max-width: 1200px;
@@ -33,29 +33,42 @@
         h1 {
             text-align: center;
             color: var(--primary);
-            margin-bottom: 30px;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
         }
         .card {
             background: #fff;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
         }
         .card h2 {
             margin-top: 0;
             color: var(--primary);
-            font-size: 1.25rem;
+            font-size: 1.15rem;
             border-bottom: 2px solid var(--bg);
             padding-bottom: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .grid-project {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(100%, 1fr));
+            gap: 10px;
         }
+        
+        @media (min-width: 600px) {
+            .grid-project {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (min-width: 900px) {
+            .grid-project {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
         .form-group {
             margin-bottom: 15px;
         }
@@ -63,138 +76,223 @@
             display: block;
             margin-bottom: 5px;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #555;
         }
         input, select {
             width: 100%;
-            padding: 8px 12px;
+            padding: 12px; /* Maior para toque na tela */
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 6px;
             box-sizing: border-box;
             font-family: inherit;
-            font-size: 0.95rem;
+            font-size: 16px; /* Evita zoom automático no iOS */
+            background-color: #fcfcfc;
         }
         input:focus, select:focus {
             outline: none;
             border-color: var(--secondary);
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+            background-color: #fff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.15);
         }
+        
+        .template-section {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border: 1px solid #e9ecef;
+        }
+        @media (min-width: 600px) {
+            .template-section {
+                flex-direction: row;
+                align-items: flex-end;
+            }
+        }
+
         .grid-item-form {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 15px;
-            align-items: end;
+            grid-template-columns: 1fr;
+            gap: 10px;
         }
+        @media (min-width: 600px) {
+            .grid-item-form {
+                grid-template-columns: 1fr 2fr auto;
+                align-items: end;
+            }
+        }
+
         .btn {
-            padding: 10px 15px;
+            padding: 12px 15px;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
             font-size: 1rem;
             transition: 0.2s;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             justify-content: center;
-        }
-        .btn-add {
-            background-color: var(--success);
-            color: white;
             width: 100%;
-            height: 38px;
         }
-        .btn-add:hover { background-color: #218838; }
-        .btn-load {
-            background-color: var(--warning);
-            color: #333;
-            height: 38px;
-        }
-        .btn-load:hover { background-color: #e0a800; }
+        .btn-add { background-color: var(--success); color: white; }
+        .btn-add:active { background-color: #218838; }
+        .btn-load { background-color: var(--warning); color: #333; }
+        .btn-load:active { background-color: #e0a800; }
         .btn-generate {
             background-color: var(--secondary);
             color: white;
-            width: 100%;
             padding: 15px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             margin-top: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 10px rgba(0,123,255,0.3);
         }
-        .btn-generate:hover { background-color: #0069d9; }
+        .btn-generate:active { background-color: #0056b3; transform: translateY(2px); }
         .btn-remove {
-            background-color: var(--danger);
-            color: white;
-            padding: 6px 10px;
-            font-size: 0.9rem;
+            background-color: transparent;
+            color: var(--danger);
+            padding: 10px;
+            font-size: 1.2rem;
+            width: auto;
         }
-        .btn-remove:hover { background-color: #c82333; }
+        
+        /* Estilos da Tabela Responsiva (Estilo "Card" no Mobile) */
+        .table-wrapper {
+            width: 100%;
+        }
         
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
             background: #fff;
-            font-size: 0.9rem;
         }
-        th, td {
-            border: 1px solid var(--border);
-            padding: 8px;
-            text-align: left;
-            vertical-align: middle;
+
+        /* Oculta cabeçalhos em telas muito pequenas */
+        @media (max-width: 768px) {
+            table thead {
+                display: none;
+            }
+            table, tbody, tr, td {
+                display: block;
+                width: 100%;
+            }
+            tr {
+                margin-bottom: 15px;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 10px;
+                position: relative;
+                background-color: #fff;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            }
+            td {
+                text-align: right;
+                padding: 8px 0;
+                border: none;
+                border-bottom: 1px dashed #eee;
+                min-height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            td:last-child {
+                border-bottom: none;
+            }
+            td::before {
+                content: attr(data-label);
+                float: left;
+                font-weight: bold;
+                color: var(--primary);
+                font-size: 0.85rem;
+                text-align: left;
+                width: 40%;
+                padding-right: 10px;
+            }
+            td input {
+                width: 60%;
+                text-align: right;
+                padding: 8px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+            }
+            td .input-qtd { width: 60px; }
+            
+            /* Ajuste do botão remover no mobile */
+            .td-action {
+                justify-content: flex-end !important;
+                padding-top: 10px !important;
+            }
+            .td-action::before { display: none; }
+            .btn-remove {
+                background-color: #fff0f0;
+                border: 1px solid var(--danger);
+                border-radius: 4px;
+                padding: 8px 15px;
+                font-size: 0.9rem;
+            }
+            .btn-remove::after { content: " Excluir Item"; font-family: inherit;}
         }
-        th {
-            background-color: var(--primary);
-            color: white;
-            font-weight: 600;
+
+        /* Telas maiores (Desktop / Tablet paisagem) */
+        @media (min-width: 769px) {
+            .table-wrapper { overflow-x: auto; }
+            th, td {
+                border: 1px solid var(--border);
+                padding: 10px 8px;
+                text-align: left;
+                vertical-align: middle;
+            }
+            th {
+                background-color: var(--primary);
+                color: white;
+                font-weight: 600;
+                white-space: nowrap;
+            }
+            td input {
+                padding: 6px;
+                font-size: 0.9rem;
+                margin-bottom: 0;
+                border: 1px solid transparent;
+                background-color: transparent;
+                border-bottom: 1px dashed #aaa;
+                border-radius: 0;
+                width: 100%;
+            }
+            td input:focus {
+                background-color: #fff;
+                border: 1px solid var(--secondary);
+                border-radius: 4px;
+            }
+            .input-code { width: 90px; font-weight: bold; color: var(--primary); }
+            .input-qtd { width: 50px; text-align: center; }
+            .input-calc { width: 120px; }
+            tbody tr:nth-child(even) { background-color: #f8f9fa; }
+            tbody tr:hover { background-color: #e9ecef; }
+            .btn-remove:hover { background-color: #ffeeee; border-radius: 4px; }
         }
-        /* Inputs dentro da tabela */
-        td input {
-            padding: 6px;
-            font-size: 0.9rem;
-            margin-bottom: 0;
-            border: 1px solid transparent;
-            background-color: transparent;
-            border-bottom: 1px dashed #aaa;
-            border-radius: 0;
-        }
-        td input:focus {
-            background-color: #fff;
-            border: 1px solid var(--secondary);
-        }
-        .input-code { width: 100px; font-weight: bold; color: var(--primary); }
-        .input-qtd { width: 60px; text-align: center; }
-        .input-calc { width: 140px; }
-        
-        tbody tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        tbody tr:hover {
-            background-color: #e9ecef;
-        }
+
         .empty-state {
             text-align: center;
-            padding: 30px;
+            padding: 30px !important;
             color: #777;
             font-style: italic;
+            display: block !important;
+            width: 100% !important;
+            border: none !important;
         }
-        .hidden {
-            display: none !important;
-        }
-        .template-section {
-            background-color: #e9ecef;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 15px;
-            align-items: flex-end;
-        }
+        .empty-state::before { display: none !important; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1><i class="fas fa-file-excel"></i> Gerador de Lista de Perfis - Padrão CEM</h1>
+    <h1><i class="fas fa-file-excel"></i> Gerador CEM</h1>
 
     <!-- DADOS DO PROJETO -->
     <div class="card">
@@ -227,7 +325,7 @@
             <div class="form-group" style="flex: 1; margin-bottom: 0;">
                 <label>Carregar Tipologia Base (Opcional):</label>
                 <select id="modelo_base">
-                    <option value="">Selecione um modelo para pré-preencher a lista...</option>
+                    <option value="">Selecione um modelo pronto...</option>
                     <option value="janela_correr_2f">Janela de Correr (2 Folhas)</option>
                     <option value="janela_correr_4f">Janela de Correr (4 Folhas)</option>
                     <option value="maximar">Janela Maxim-ar</option>
@@ -237,13 +335,13 @@
             <button type="button" class="btn btn-load" onclick="carregarModelo()"><i class="fas fa-magic"></i> Carregar Estrutura</button>
         </div>
 
-        <p style="text-align: center; margin: 10px 0; color: #777; font-size: 0.9em;">- OU ADICIONE UM ITEM MANUALMENTE -</p>
+        <p style="text-align: center; margin: 15px 0; color: #999; font-size: 0.8em; font-weight: bold;">OU ADICIONE MANUALMENTE</p>
 
         <form id="formAdicionarItem" onsubmit="event.preventDefault(); adicionarItemManual();">
             <div class="grid-item-form">
                 <div class="form-group">
                     <label>Material</label>
-                    <select id="item_material" onchange="toggleCamposMaterial()">
+                    <select id="item_material">
                         <option value="Perfil">Perfil</option>
                         <option value="Vidro">Vidro</option>
                         <option value="Acessório">Acessório</option>
@@ -254,41 +352,44 @@
                     <input type="text" id="item_categoria" placeholder="Ex: Marco Superior..." required>
                 </div>
                 <div class="form-group">
-                    <button type="submit" class="btn btn-add"><i class="fas fa-plus"></i> Adicionar Linha Vazia</button>
+                    <button type="submit" class="btn btn-add"><i class="fas fa-plus"></i> Adicionar Linha</button>
                 </div>
             </div>
         </form>
     </div>
 
     <!-- LISTA DE ITENS EDITÁVEL -->
-    <div class="card" style="overflow-x: auto;">
-        <h2>Lista de Perfis (Edite os valores diretamente na tabela)</h2>
-        <table id="tabelaItens">
-            <thead>
-                <tr>
-                    <th>Material</th>
-                    <th>Categoria</th>
-                    <th>Qtd.</th>
-                    <th>Código do Perfil</th>
-                    <th>Cálculo / Medida</th>
-                    <th>Espessura</th>
-                    <th>Ação</th>
-                </tr>
-            </thead>
-            <tbody id="tbodyItens">
-                <tr><td colspan="7" class="empty-state">Selecione uma Tipologia Base acima ou adicione itens manualmente.</td></tr>
-            </tbody>
-        </table>
+    <div class="card">
+        <h2>Lista de Perfis</h2>
+        <p style="font-size: 0.85rem; color: #666; margin-top:-10px; margin-bottom:15px;">Edite os valores (código, cálculo, etc) diretamente na lista abaixo.</p>
+        
+        <div class="table-wrapper">
+            <table id="tabelaItens">
+                <thead>
+                    <tr>
+                        <th>Mat.</th>
+                        <th>Categoria</th>
+                        <th>Qtd.</th>
+                        <th>Código</th>
+                        <th>Cálculo/Medida</th>
+                        <th>Esp.</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyItens">
+                    <tr><td colspan="7" class="empty-state">Nenhum item. Carregue uma tipologia ou adicione manualmente.</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <button type="button" class="btn btn-generate" onclick="gerarExcel()"><i class="fas fa-file-export"></i> Gerar Planilha (Modelo CEM)</button>
+    <button type="button" class="btn btn-generate" onclick="gerarExcel()"><i class="fas fa-file-export"></i> GERAR PLANILHA XLSX</button>
 </div>
 
 <script>
     let listaDeItens = [];
     let idCounter = 0;
 
-    // Dicionário de templates (estruturas base)
     const templates = {
         'janela_correr_2f': [
             { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', esp: '' },
@@ -344,11 +445,8 @@
 
         const template = templates[modeloId];
         
-        // Pergunta se deseja limpar a lista atual se houver itens
         if (listaDeItens.length > 0) {
-            if (!confirm("Isso vai adicionar os itens do modelo à sua lista atual. Deseja continuar?")) {
-                return;
-            }
+            if (!confirm("Isso vai adicionar os itens à sua lista atual. Continuar?")) return;
         }
 
         template.forEach(item => {
@@ -365,7 +463,7 @@
         });
 
         atualizarTabela();
-        document.getElementById("modelo_base").value = ""; // reseta o select
+        document.getElementById("modelo_base").value = ""; 
     }
 
     function adicionarItemManual() {
@@ -404,37 +502,37 @@
         tbody.innerHTML = "";
 
         if (listaDeItens.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Selecione uma Tipologia Base acima ou adicione itens manualmente.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum item. Carregue uma tipologia ou adicione manualmente.</td></tr>';
             return;
         }
 
         listaDeItens.forEach(item => {
             const tr = document.createElement("tr");
             
-            // Icones visuais por material
-            let matIcon = '<i class="fas fa-bars" style="color:#555"></i> ';
+            let matIcon = '';
             if(item.material === 'Vidro') matIcon = '<i class="fas fa-border-all" style="color:#0dcaf0"></i> ';
             if(item.material === 'Acessório') matIcon = '<i class="fas fa-cogs" style="color:#fd7e14"></i> ';
 
+            // O atributo data-label é o que faz a mágica no mobile (CSS ::before)
             tr.innerHTML = `
-                <td>${matIcon} <b>${item.material}</b></td>
-                <td>
+                <td data-label="Material">${matIcon} <b>${item.material}</b></td>
+                <td data-label="Categoria">
                     <input type="text" value="${item.categoria}" onchange="atualizarCampo(${item.id}, 'categoria', this.value)" placeholder="Categoria">
                 </td>
-                <td>
+                <td data-label="Quantidade">
                     <input type="number" class="input-qtd" value="${item.qtd}" min="1" onchange="atualizarCampo(${item.id}, 'qtd', this.value)">
                 </td>
-                <td>
+                <td data-label="Código">
                     <input type="text" class="input-code" value="${item.codigo}" onchange="atualizarCampo(${item.id}, 'codigo', this.value)" placeholder="Ex: SU001">
                 </td>
-                <td>
+                <td data-label="Cálculo">
                     <input type="text" class="input-calc" value="${item.calculo}" onchange="atualizarCampo(${item.id}, 'calculo', this.value)" placeholder="Ex: L - 24">
                 </td>
-                <td>
-                    <input type="text" value="${item.espessura}" onchange="atualizarCampo(${item.id}, 'espessura', this.value)" placeholder="Espessura" style="width: 80px;">
+                <td data-label="Espessura">
+                    <input type="text" value="${item.espessura}" onchange="atualizarCampo(${item.id}, 'espessura', this.value)" placeholder="Esp." style="width: 70px;">
                 </td>
-                <td>
-                    <button class="btn btn-remove" onclick="removerItem(${item.id})"><i class="fas fa-trash"></i></button>
+                <td class="td-action">
+                    <button class="btn-remove" onclick="removerItem(${item.id})"><i class="fas fa-trash"></i></button>
                 </td>
             `;
             tbody.appendChild(tr);
@@ -447,7 +545,6 @@
             return;
         }
 
-        // Cabeçalho Padrão CEM
         const data = [
             ["CÓDIGO:", document.getElementById("proj_codigo").value || "-", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
             ["DESCRIÇÃO:", document.getElementById("proj_desc").value || "-", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""],
@@ -460,20 +557,18 @@
         listaDeItens.forEach(item => {
             let row = new Array(18).fill("");
             
-            row[0] = item.material; // MATERIAL
-            row[2] = item.codigo;   // CÓDIGO (Referência)
-            row[3] = item.categoria;// CATEGORIA
-            row[11] = item.qtd;     // QTD.
-            row[17] = item.espessura;// Espessura
+            row[0] = item.material; 
+            row[2] = item.codigo;   
+            row[3] = item.categoria;
+            row[11] = item.qtd;     
+            row[17] = item.espessura;
             
-            // Tratamento da coluna de medidas (Comprimento para perfil, L e H para Vidro)
             if (item.material === "Vidro" && item.calculo.includes("x")) {
-                // Tenta extrair L e H se o usuário preencheu no formato "L: 100 x H: 200" ou "100 x 200"
                 let partes = item.calculo.split("x");
-                row[12] = partes[0].replace(/L:/g, "").trim(); // L
-                row[13] = partes[1].replace(/H:/g, "").trim(); // H
+                row[12] = partes[0].replace(/L:/g, "").trim(); 
+                row[13] = partes[1].replace(/H:/g, "").trim(); 
             } else {
-                row[10] = item.calculo; // COMPRIMENTO
+                row[10] = item.calculo; 
             }
             
             data.push(row);
