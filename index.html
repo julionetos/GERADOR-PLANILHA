@@ -78,7 +78,7 @@
             font-weight: 600;
             font-size: 0.85rem;
             color: #555;
-            white-space: nowrap; /* Evita quebra de linha na label */
+            white-space: nowrap;
         }
         input, select {
             width: 100%;
@@ -106,6 +106,25 @@
             flex-direction: column;
             gap: 10px;
             border: 1px solid #e9ecef;
+        }
+
+        .preview-container {
+            margin-top: 10px;
+            height: 90px;
+            width: 100%;
+            background: #fff;
+            border: 1px dashed #ccc;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        .preview-container svg {
+            max-height: 80px;
+            max-width: 100%;
+            padding: 5px;
         }
 
         .grid-item-form {
@@ -150,135 +169,65 @@
             width: auto;
         }
 
-        /* AJUSTES PARA DESKTOP (Navegador) */
+        /* AJUSTES PARA DESKTOP */
         @media (min-width: 600px) {
             .template-section {
                 flex-direction: row;
-                align-items: flex-end;
+                align-items: center; /* Mudado de flex-end para center por causa da imagem */
             }
             .grid-item-form {
                 grid-template-columns: 1fr 2fr auto;
                 align-items: end;
             }
-            /* Conserta o botão espremendo o campo de seleção no PC */
             .template-section .btn-load,
             .grid-item-form .btn-add {
                 width: auto;
                 white-space: nowrap;
+                height: 44px; /* Fixa altura para alinhar bonito */
             }
             .form-group-flex {
                 flex: 1;
                 min-width: 250px;
-            }
-        }
-        
-        /* Estilos da Tabela Responsiva (Estilo "Card" no Mobile) */
-        .table-wrapper {
-            width: 100%;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #fff;
-        }
-
-        /* Oculta cabeçalhos em telas muito pequenas */
-        @media (max-width: 768px) {
-            table thead {
-                display: none;
-            }
-            table, tbody, tr, td {
-                display: block;
-                width: 100%;
-            }
-            tr {
-                margin-bottom: 15px;
-                border: 1px solid var(--border);
-                border-radius: 8px;
-                padding: 10px;
-                position: relative;
-                background-color: #fff;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            }
-            td {
-                text-align: right;
-                padding: 8px 0;
-                border: none;
-                border-bottom: 1px dashed #eee;
-                min-height: 40px;
                 display: flex;
+                flex-direction: row;
+                gap: 15px;
                 align-items: center;
-                justify-content: space-between;
             }
-            td:last-child {
-                border-bottom: none;
+            .select-wrapper {
+                flex: 1;
             }
-            td::before {
-                content: attr(data-label);
-                float: left;
-                font-weight: bold;
-                color: var(--primary);
-                font-size: 0.85rem;
-                text-align: left;
-                width: 40%;
-                padding-right: 10px;
+            .preview-container {
+                margin-top: 0;
+                width: 140px;
+                height: 70px;
             }
-            td input {
-                width: 60%;
-                text-align: right;
-                padding: 8px;
-                border: 1px solid #ddd;
-                border-radius: 4px;
-            }
+        }
+        
+        .table-wrapper { width: 100%; }
+        table { width: 100%; border-collapse: collapse; background: #fff; }
+
+        @media (max-width: 768px) {
+            table thead { display: none; }
+            table, tbody, tr, td { display: block; width: 100%; }
+            tr { margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; padding: 10px; position: relative; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+            td { text-align: right; padding: 8px 0; border: none; border-bottom: 1px dashed #eee; min-height: 40px; display: flex; align-items: center; justify-content: space-between; }
+            td:last-child { border-bottom: none; }
+            td::before { content: attr(data-label); float: left; font-weight: bold; color: var(--primary); font-size: 0.85rem; text-align: left; width: 40%; padding-right: 10px; }
+            td input { width: 60%; text-align: right; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
             td .input-qtd { width: 60px; }
-            
-            /* Ajuste do botão remover no mobile */
-            .td-action {
-                justify-content: flex-end !important;
-                padding-top: 10px !important;
-            }
+            .td-action { justify-content: flex-end !important; padding-top: 10px !important; }
             .td-action::before { display: none; }
-            .btn-remove {
-                background-color: #fff0f0;
-                border: 1px solid var(--danger);
-                border-radius: 4px;
-                padding: 8px 15px;
-                font-size: 0.9rem;
-            }
+            .btn-remove { background-color: #fff0f0; border: 1px solid var(--danger); border-radius: 4px; padding: 8px 15px; font-size: 0.9rem; }
             .btn-remove::after { content: " Excluir Item"; font-family: inherit;}
+            .form-group-flex { flex-direction: column; }
         }
 
-        /* Telas maiores (Desktop / Tablet paisagem) */
         @media (min-width: 769px) {
             .table-wrapper { overflow-x: auto; }
-            th, td {
-                border: 1px solid var(--border);
-                padding: 10px 8px;
-                text-align: left;
-                vertical-align: middle;
-            }
-            th {
-                background-color: var(--primary);
-                color: white;
-                font-weight: 600;
-                white-space: nowrap;
-            }
-            td input {
-                padding: 6px;
-                font-size: 0.9rem;
-                margin-bottom: 0;
-                border: 1px solid transparent;
-                background-color: transparent;
-                border-bottom: 1px dashed #aaa;
-                border-radius: 0;
-                width: 100%;
-            }
-            td input:focus {
-                background-color: #fff;
-                border: 1px solid var(--secondary);
-                border-radius: 4px;
-            }
+            th, td { border: 1px solid var(--border); padding: 10px 8px; text-align: left; vertical-align: middle; }
+            th { background-color: var(--primary); color: white; font-weight: 600; white-space: nowrap; }
+            td input { padding: 6px; font-size: 0.9rem; margin-bottom: 0; border: 1px solid transparent; background-color: transparent; border-bottom: 1px dashed #aaa; border-radius: 0; width: 100%; }
+            td input:focus { background-color: #fff; border: 1px solid var(--secondary); border-radius: 4px; }
             .input-code { width: 90px; font-weight: bold; color: var(--primary); }
             .input-qtd { width: 50px; text-align: center; }
             .input-calc { width: 120px; }
@@ -287,15 +236,7 @@
             .btn-remove:hover { background-color: #ffeeee; border-radius: 4px; }
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 30px !important;
-            color: #777;
-            font-style: italic;
-            display: block !important;
-            width: 100% !important;
-            border: none !important;
-        }
+        .empty-state { text-align: center; padding: 30px !important; color: #777; font-style: italic; display: block !important; width: 100% !important; border: none !important; }
         .empty-state::before { display: none !important; }
         .hidden { display: none !important; }
     </style>
@@ -334,14 +275,20 @@
         
         <div class="template-section">
             <div class="form-group form-group-flex" style="margin-bottom: 0;">
-                <label>Carregar Tipologia Base (Opcional):</label>
-                <select id="modelo_base">
-                    <option value="">Selecione um modelo pronto...</option>
-                    <option value="janela_correr_2f">Janela de Correr (2 Folhas)</option>
-                    <option value="janela_correr_4f">Janela de Correr (4 Folhas)</option>
-                    <option value="maximar">Janela Maxim-ar</option>
-                    <option value="porta_giro">Porta de Giro</option>
-                </select>
+                <div class="select-wrapper">
+                    <label>Carregar Tipologia Base (Opcional):</label>
+                    <select id="modelo_base" onchange="mostrarPreview()">
+                        <option value="">Selecione um modelo pronto...</option>
+                        <option value="janela_correr_2f">Janela de Correr (2 Folhas)</option>
+                        <option value="janela_correr_4f">Janela de Correr (4 Folhas)</option>
+                        <option value="maximar">Janela Maxim-ar</option>
+                        <option value="porta_giro">Porta de Giro</option>
+                    </select>
+                </div>
+                <!-- Box da Imagem -->
+                <div id="preview_esquadria" class="preview-container">
+                    <span style="color:#aaa; font-size:0.75rem; text-align:center; padding: 5px;">Selecione para<br>ver esquema</span>
+                </div>
             </div>
             <button type="button" class="btn btn-load" onclick="carregarModelo()"><i class="fas fa-magic"></i> Carregar Estrutura</button>
         </div>
@@ -400,6 +347,31 @@
 <script>
     let listaDeItens = [];
     let idCounter = 0;
+
+    // Desenhos em SVG (Arquitetônicos) para cada esquadria
+    const svgs = {
+        'janela_correr_2f': `<svg viewBox="0 0 100 60"><rect x="5" y="5" width="90" height="50" fill="none" stroke="#1e3a5f" stroke-width="3"/><line x1="50" y1="5" x2="50" y2="55" stroke="#1e3a5f" stroke-width="2"/><path d="M 30 30 L 40 30 M 35 25 L 40 30 L 35 35" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/><path d="M 70 30 L 60 30 M 65 25 L 60 30 L 65 35" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/></svg>`,
+        
+        'janela_correr_4f': `<svg viewBox="0 0 100 60"><rect x="5" y="5" width="90" height="50" fill="none" stroke="#1e3a5f" stroke-width="3"/><line x1="27.5" y1="5" x2="27.5" y2="55" stroke="#1e3a5f" stroke-width="2"/><line x1="50" y1="5" x2="50" y2="55" stroke="#1e3a5f" stroke-width="3"/><line x1="72.5" y1="5" x2="72.5" y2="55" stroke="#1e3a5f" stroke-width="2"/><path d="M 35 30 L 45 30 M 40 25 L 45 30 L 40 35" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/><path d="M 65 30 L 55 30 M 60 25 L 55 30 L 60 35" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/></svg>`,
+        
+        'maximar': `<svg viewBox="0 0 60 60"><rect x="10" y="10" width="40" height="40" fill="none" stroke="#1e3a5f" stroke-width="3"/><line x1="10" y1="50" x2="30" y2="10" stroke="#007bff" stroke-width="1.5" stroke-dasharray="4,3"/><line x1="50" y1="50" x2="30" y2="10" stroke="#007bff" stroke-width="1.5" stroke-dasharray="4,3"/></svg>`,
+        
+        'porta_giro': `<svg viewBox="0 0 60 100"><rect x="15" y="10" width="30" height="80" fill="none" stroke="#1e3a5f" stroke-width="3"/><line x1="15" y1="10" x2="45" y2="50" stroke="#007bff" stroke-width="1.5" stroke-dasharray="4,3"/><line x1="15" y1="90" x2="45" y2="50" stroke="#007bff" stroke-width="1.5" stroke-dasharray="4,3"/><circle cx="40" cy="50" r="2.5" fill="#1e3a5f"/></svg>`
+    };
+
+    function mostrarPreview() {
+        const val = document.getElementById('modelo_base').value;
+        const container = document.getElementById('preview_esquadria');
+        if (val && svgs[val]) {
+            container.innerHTML = svgs[val];
+            container.style.borderStyle = 'solid';
+            container.style.borderColor = 'var(--secondary)';
+        } else {
+            container.innerHTML = '<span style="color:#aaa; font-size:0.75rem; text-align:center; padding: 5px;">Selecione para<br>ver esquema</span>';
+            container.style.borderStyle = 'dashed';
+            container.style.borderColor = '#ccc';
+        }
+    }
 
     const templates = {
         'janela_correr_2f': [
@@ -474,7 +446,8 @@
         });
 
         atualizarTabela();
-        document.getElementById("modelo_base").value = ""; 
+        // Não limpa o select para que o desenho continue visível como referência
+        // document.getElementById("modelo_base").value = ""; 
     }
 
     function adicionarItemManual() {
@@ -524,7 +497,6 @@
             if(item.material === 'Vidro') matIcon = '<i class="fas fa-border-all" style="color:#0dcaf0"></i> ';
             if(item.material === 'Acessório') matIcon = '<i class="fas fa-cogs" style="color:#fd7e14"></i> ';
 
-            // O atributo data-label é o que faz a mágica no mobile (CSS ::before)
             tr.innerHTML = `
                 <td data-label="Material">${matIcon} <b>${item.material}</b></td>
                 <td data-label="Categoria">
