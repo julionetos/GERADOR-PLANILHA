@@ -51,6 +51,9 @@
             border-bottom: 2px solid var(--bg);
             padding-bottom: 10px;
             margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .grid-project {
             display: grid;
@@ -168,12 +171,21 @@
             font-size: 1.2rem;
             width: auto;
         }
+        .btn-clear {
+            background-color: var(--danger);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: none;
+        }
 
         /* AJUSTES PARA DESKTOP */
         @media (min-width: 600px) {
             .template-section {
                 flex-direction: row;
-                align-items: center; /* Mudado de flex-end para center por causa da imagem */
+                align-items: center; 
             }
             .grid-item-form {
                 grid-template-columns: 1fr 2fr auto;
@@ -183,7 +195,7 @@
             .grid-item-form .btn-add {
                 width: auto;
                 white-space: nowrap;
-                height: 44px; /* Fixa altura para alinhar bonito */
+                height: 44px; 
             }
             .form-group-flex {
                 flex: 1;
@@ -210,11 +222,12 @@
             table thead { display: none; }
             table, tbody, tr, td { display: block; width: 100%; }
             tr { margin-bottom: 15px; border: 1px solid var(--border); border-radius: 8px; padding: 10px; position: relative; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-            td { text-align: right; padding: 8px 0; border: none; border-bottom: 1px dashed #eee; min-height: 40px; display: flex; align-items: center; justify-content: space-between; }
+            td { text-align: right; padding: 8px 0; border: none; border-bottom: 1px dashed #eee; min-height: 40px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 5px; }
             td:last-child { border-bottom: none; }
-            td::before { content: attr(data-label); float: left; font-weight: bold; color: var(--primary); font-size: 0.85rem; text-align: left; width: 40%; padding-right: 10px; }
+            td::before { content: attr(data-label); font-weight: bold; color: var(--primary); font-size: 0.85rem; text-align: left; width: 35%; padding-right: 5px; }
             td input { width: 60%; text-align: right; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
             td .input-qtd { width: 60px; }
+            td .input-vidro { width: 45%; }
             .td-action { justify-content: flex-end !important; padding-top: 10px !important; }
             .td-action::before { display: none; }
             .btn-remove { background-color: #fff0f0; border: 1px solid var(--danger); border-radius: 4px; padding: 8px 15px; font-size: 0.9rem; }
@@ -230,7 +243,7 @@
             td input:focus { background-color: #fff; border: 1px solid var(--secondary); border-radius: 4px; }
             .input-code { width: 90px; font-weight: bold; color: var(--primary); }
             .input-qtd { width: 50px; text-align: center; }
-            .input-calc { width: 120px; }
+            .input-calc { width: 150px; }
             tbody tr:nth-child(even) { background-color: #f8f9fa; }
             tbody tr:hover { background-color: #e9ecef; }
             .btn-remove:hover { background-color: #ffeeee; border-radius: 4px; }
@@ -252,39 +265,58 @@
         <div class="grid-project">
             <div class="form-group">
                 <label>CÓDIGO (Projeto):</label>
-                <input type="text" id="proj_codigo" placeholder="Ex: PRJ-2026-001">
+                <input type="text" id="proj_codigo" placeholder="Ex: PRJ-2026-001" onchange="limparListaAoTrocar()">
             </div>
             <div class="form-group">
                 <label>DESCRIÇÃO:</label>
-                <input type="text" id="proj_desc" placeholder="Ex: Janela de Correr 2 Folhas">
+                <input type="text" id="proj_desc" placeholder="Ex: Janela de Correr">
             </div>
             <div class="form-group">
                 <label>PROJETISTA:</label>
                 <input type="text" id="proj_proj" placeholder="Seu Nome">
             </div>
             <div class="form-group">
-                <label>LINHA:</label>
-                <input type="text" id="proj_linha" placeholder="Ex: Suprema / Gold">
+                <label>LINHA GERAL DO PROJETO:</label>
+                <input type="text" id="proj_linha" placeholder="Ex: Suprema / Gold" readonly value="Definida na esquadria abaixo" style="background-color: #eee; color: #888;">
             </div>
         </div>
     </div>
 
     <!-- CARREGAR TEMPLATE -->
     <div class="card">
-        <h2>Adicionar Itens</h2>
+        <h2>Adicionar Esquadria</h2>
         
         <div class="template-section">
             <div class="form-group form-group-flex" style="margin-bottom: 0;">
+                
                 <div class="select-wrapper">
-                    <label>Carregar Tipologia Base (Opcional):</label>
-                    <select id="modelo_base" onchange="mostrarPreview()">
-                        <option value="">Selecione um modelo pronto...</option>
+                    <label>1. Tipologia:</label>
+                    <select id="modelo_base" onchange="mostrarPreview(); limparListaAoTrocar();">
+                        <option value="">Selecione a esquadria...</option>
                         <option value="janela_correr_2f">Janela de Correr (2 Folhas)</option>
-                        <option value="janela_correr_4f">Janela de Correr (4 Folhas)</option>
+                        <option value="janela_correr_3f">Janela de Correr (3 Folhas)</option>
+                        <option value="janela_correr_4f_central">Janela de Correr (4 Folhas - Central)</option>
+                        <option value="janela_correr_4f_sequencial">Janela de Correr (4 Folhas - Sequencial)</option>
+                        <option value="janela_correr_6f">Janela de Correr (6 Folhas)</option>
+                        <option value="porta_correr_2f">Porta de Correr (2 Folhas)</option>
+                        <option value="porta_correr_3f">Porta de Correr (3 Folhas)</option>
+                        <option value="porta_correr_4f_central">Porta de Correr (4 Folhas - Central)</option>
+                        <option value="porta_correr_4f_sequencial">Porta de Correr (4 Folhas - Sequencial)</option>
+                        <option value="porta_correr_6f">Porta de Correr (6 Folhas)</option>
+                        <option value="fixo">Fixo</option>
                         <option value="maximar">Janela Maxim-ar</option>
                         <option value="porta_giro">Porta de Giro</option>
                     </select>
                 </div>
+                
+                <div class="select-wrapper">
+                    <label>2. Linha:</label>
+                    <select id="linha_base" onchange="atualizarLinhaProjeto(); limparListaAoTrocar();">
+                        <option value="suprema">Linha Suprema</option>
+                        <option value="gold">Linha Gold</option>
+                    </select>
+                </div>
+
                 <!-- Box da Imagem -->
                 <div id="preview_esquadria" class="preview-container">
                     <span style="color:#aaa; font-size:0.75rem; text-align:center; padding: 5px;">Selecione para<br>ver esquema</span>
@@ -318,8 +350,11 @@
 
     <!-- LISTA DE ITENS EDITÁVEL -->
     <div class="card">
-        <h2>Lista de Perfis</h2>
-        <p style="font-size: 0.85rem; color: #666; margin-top:-10px; margin-bottom:15px;">Edite os valores (código, cálculo, etc) diretamente na lista abaixo.</p>
+        <h2>
+            Lista de Perfis 
+            <button type="button" class="btn-clear" onclick="limparTodaLista()"><i class="fas fa-eraser"></i> Limpar Tudo</button>
+        </h2>
+        <p style="font-size: 0.85rem; color: #666; margin-top:-10px; margin-bottom:15px;">A lista é apagada automaticamente ao trocar a tipologia ou projeto, ou clique em limpar.</p>
         
         <div class="table-wrapper">
             <table id="tabelaItens">
@@ -329,7 +364,7 @@
                         <th>Categoria</th>
                         <th>Qtd.</th>
                         <th>Código</th>
-                        <th>Cálculo/Medida</th>
+                        <th>Cálculo/Medida (L x H p/ Vidro)</th>
                         <th>Esp.</th>
                         <th></th>
                     </tr>
@@ -348,11 +383,50 @@
     let listaDeItens = [];
     let idCounter = 0;
 
-    // Desenhos em SVG (Arquitetônicos) para cada esquadria
+    function atualizarLinhaProjeto() {
+        const linhaSelect = document.getElementById('linha_base');
+        const linhaInput = document.getElementById('proj_linha');
+        linhaInput.value = linhaSelect.options[linhaSelect.selectedIndex].text;
+    }
+    document.addEventListener("DOMContentLoaded", atualizarLinhaProjeto);
+
+    function limparListaAoTrocar() {
+        if (listaDeItens.length > 0) {
+            listaDeItens = [];
+            atualizarTabela();
+        }
+    }
+    
+    function limparTodaLista() {
+        if(confirm("Deseja realmente limpar toda a lista?")) {
+            listaDeItens = [];
+            atualizarTabela();
+        }
+    }
+
+    // Desenhos em SVG
     const svgs = {
         'janela_correr_2f': `<svg viewBox="0 0 100 60"><rect x="5" y="5" width="90" height="50" fill="none" stroke="#1e3a5f" stroke-width="3"/><line x1="50" y1="5" x2="50" y2="55" stroke="#1e3a5f" stroke-width="2"/><path d="M 30 30 L 40 30 M 35 25 L 40 30 L 35 35" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/><path d="M 70 30 L 60 30 M 65 25 L 60 30 L 65 35" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/></svg>`,
         
-        'janela_correr_4f': `<svg viewBox="0 0 100 60"><rect x="5" y="5" width="90" height="50" fill="none" stroke="#1e3a5f" stroke-width="3"/><line x1="27.5" y1="5" x2="27.5" y2="55" stroke="#1e3a5f" stroke-width="2"/><line x1="50" y1="5" x2="50" y2="55" stroke="#1e3a5f" stroke-width="3"/><line x1="72.5" y1="5" x2="72.5" y2="55" stroke="#1e3a5f" stroke-width="2"/><path d="M 35 30 L 45 30 M 40 25 L 45 30 L 40 35" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/><path d="M 65 30 L 55 30 M 60 25 L 55 30 L 60 35" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/></svg>`,
+        'janela_correr_3f': `<svg viewBox="0 0 100 60"><rect x="5" y="5" width="90" height="50" fill="none" stroke="#1e3a5f" stroke-width="3"/><line x1="35" y1="5" x2="35" y2="55" stroke="#1e3a5f" stroke-width="2"/><line x1="65" y1="5" x2="65" y2="55" stroke="#1e3a5f" stroke-width="2"/><path d="M 20 30 L 30 30 M 25 25 L 30 30 L 25 35" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/><path d="M 80 30 L 70 30 M 75 25 L 70 30 L 75 35" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/></svg>`,
+        
+        'janela_correr_4f_central': `<svg viewBox="0 0 100 60"><rect x="5" y="5" width="90" height="50" fill="none" stroke="#1e3a5f" stroke-width="3"/><line x1="27.5" y1="5" x2="27.5" y2="55" stroke="#1e3a5f" stroke-width="2"/><line x1="50" y1="5" x2="50" y2="55" stroke="#1e3a5f" stroke-width="3"/><line x1="72.5" y1="5" x2="72.5" y2="55" stroke="#1e3a5f" stroke-width="2"/><path d="M 35 30 L 45 30 M 40 25 L 45 30 L 40 35" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/><path d="M 65 30 L 55 30 M 60 25 L 55 30 L 60 35" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/></svg>`,
+        
+        'janela_correr_4f_sequencial': `<svg viewBox="0 0 100 60"><rect x="5" y="5" width="90" height="50" fill="none" stroke="#1e3a5f" stroke-width="3"/><line x1="27.5" y1="5" x2="27.5" y2="55" stroke="#1e3a5f" stroke-width="2"/><line x1="50" y1="5" x2="50" y2="55" stroke="#1e3a5f" stroke-width="2"/><line x1="72.5" y1="5" x2="72.5" y2="55" stroke="#1e3a5f" stroke-width="2"/><path d="M 20 30 L 30 30 M 25 25 L 30 30 L 25 35" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/><path d="M 40 30 L 50 30 M 45 25 L 50 30 L 45 35" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/><path d="M 80 30 L 70 30 M 75 25 L 70 30 L 75 35" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/><path d="M 60 30 L 50 30 M 55 25 L 50 30 L 55 35" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/></svg>`,
+        
+        'janela_correr_6f': `<svg viewBox="0 0 100 60"><rect x="5" y="5" width="90" height="50" fill="none" stroke="#1e3a5f" stroke-width="3"/><line x1="20" y1="5" x2="20" y2="55" stroke="#1e3a5f" stroke-width="2"/><line x1="35" y1="5" x2="35" y2="55" stroke="#1e3a5f" stroke-width="2"/><line x1="50" y1="5" x2="50" y2="55" stroke="#1e3a5f" stroke-width="3"/><line x1="65" y1="5" x2="65" y2="55" stroke="#1e3a5f" stroke-width="2"/><line x1="80" y1="5" x2="80" y2="55" stroke="#1e3a5f" stroke-width="2"/></svg>`,
+        
+        'porta_correr_2f': `<svg viewBox="0 0 60 100"><rect x="5" y="5" width="50" height="90" fill="none" stroke="#1e3a5f" stroke-width="3"/><line x1="30" y1="5" x2="30" y2="95" stroke="#1e3a5f" stroke-width="2"/><path d="M 15 50 L 25 50 M 20 45 L 25 50 L 20 55" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/><path d="M 45 50 L 35 50 M 40 45 L 35 50 L 40 55" fill="none" stroke="#007bff" stroke-width="2" stroke-linecap="round"/></svg>`,
+        
+        'porta_correr_3f': `<svg viewBox="0 0 60 100"><rect x="5" y="5" width="50" height="90" fill="none" stroke="#1e3a5f" stroke-width="3"/><line x1="21" y1="5" x2="21" y2="95" stroke="#1e3a5f" stroke-width="2"/><line x1="38" y1="5" x2="38" y2="95" stroke="#1e3a5f" stroke-width="2"/></svg>`,
+        
+        'porta_correr_4f_central': `<svg viewBox="0 0 60 100"><rect x="5" y="5" width="50" height="90" fill="none" stroke="#1e3a5f" stroke-width="3"/><line x1="17.5" y1="5" x2="17.5" y2="95" stroke="#1e3a5f" stroke-width="2"/><line x1="30" y1="5" x2="30" y2="95" stroke="#1e3a5f" stroke-width="3"/><line x1="42.5" y1="5" x2="42.5" y2="95" stroke="#1e3a5f" stroke-width="2"/></svg>`,
+        
+        'porta_correr_4f_sequencial': `<svg viewBox="0 0 60 100"><rect x="5" y="5" width="50" height="90" fill="none" stroke="#1e3a5f" stroke-width="3"/><line x1="17.5" y1="5" x2="17.5" y2="95" stroke="#1e3a5f" stroke-width="2"/><line x1="30" y1="5" x2="30" y2="95" stroke="#1e3a5f" stroke-width="2"/><line x1="42.5" y1="5" x2="42.5" y2="95" stroke="#1e3a5f" stroke-width="2"/></svg>`,
+        
+        'porta_correr_6f': `<svg viewBox="0 0 60 100"><rect x="5" y="5" width="50" height="90" fill="none" stroke="#1e3a5f" stroke-width="3"/><line x1="13" y1="5" x2="13" y2="95" stroke="#1e3a5f" stroke-width="2"/><line x1="21" y1="5" x2="21" y2="95" stroke="#1e3a5f" stroke-width="2"/><line x1="30" y1="5" x2="30" y2="95" stroke="#1e3a5f" stroke-width="3"/><line x1="38" y1="5" x2="38" y2="95" stroke="#1e3a5f" stroke-width="2"/><line x1="46" y1="5" x2="46" y2="95" stroke="#1e3a5f" stroke-width="2"/></svg>`,
+        
+        'fixo': `<svg viewBox="0 0 60 60"><rect x="10" y="10" width="40" height="40" fill="none" stroke="#1e3a5f" stroke-width="3"/><line x1="10" y1="50" x2="50" y2="10" stroke="#1e3a5f" stroke-width="1.5" stroke-dasharray="3,3"/><line x1="10" y1="10" x2="50" y2="50" stroke="#1e3a5f" stroke-width="1.5" stroke-dasharray="3,3"/></svg>`,
         
         'maximar': `<svg viewBox="0 0 60 60"><rect x="10" y="10" width="40" height="40" fill="none" stroke="#1e3a5f" stroke-width="3"/><line x1="10" y1="50" x2="30" y2="10" stroke="#007bff" stroke-width="1.5" stroke-dasharray="4,3"/><line x1="50" y1="50" x2="30" y2="10" stroke="#007bff" stroke-width="1.5" stroke-dasharray="4,3"/></svg>`,
         
@@ -374,64 +448,274 @@
     }
 
     const templates = {
-        'janela_correr_2f': [
-            { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', esp: '' },
-            { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', esp: '' },
-            { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+48', esp: '' },
-            { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+48', esp: '' },
-            { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU002', calc: 'L-26', esp: '' },
-            { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU001', calc: 'L-26', esp: '' },
-            { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: '', calc: 'H', esp: '' },
-            { mat: 'Perfil', cat: 'Mata Junta', qtd: 2, cod: 'SU302', calc: 'H', esp: '' },
-            { mat: 'Perfil', cat: 'Folha Sup/Inf', qtd: 4, cod: 'SU053', calc: '((L-131)/2)', esp: '' },
-            { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', esp: '' },
-            { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 1, cod: 'SU040', calc: 'H-50', esp: '' },
-            { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 1, cod: 'SU041', calc: 'H-50', esp: '' },
-            { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 4, cod: 'SU102', calc: '((L-131)/2)', esp: '' },
-            { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 4, cod: 'SU102', calc: 'H-152', esp: '' },
-            { mat: 'Vidro', cat: 'Vidro', qtd: 2, cod: 'Vidro Incolor', calc: 'L:   x H:  ', esp: '6mm' }
-        ],
-        'janela_correr_4f': [
-            { mat: 'Perfil', cat: 'Marco Sup. / Inf.', qtd: 2, cod: '', calc: 'L', esp: '' },
-            { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: '', calc: 'H', esp: '' },
-            { mat: 'Perfil', cat: 'Montante Lateral', qtd: 2, cod: '', calc: 'H - ', esp: '' },
-            { mat: 'Perfil', cat: 'Montante Central', qtd: 2, cod: '', calc: 'H - ', esp: '' },
-            { mat: 'Perfil', cat: 'Mão de Amigo', qtd: 4, cod: '', calc: 'H - ', esp: '' },
-            { mat: 'Perfil', cat: 'Travessa (Folha)', qtd: 8, cod: '', calc: '(L/4) - ', esp: '' },
-            { mat: 'Vidro', cat: 'Vidro', qtd: 4, cod: 'Vidro Incolor', calc: 'L:   x H:  ', esp: '6mm' }
-        ],
-        'maximar': [
-            { mat: 'Perfil', cat: 'Marco (L)', qtd: 2, cod: '', calc: 'L', esp: '' },
-            { mat: 'Perfil', cat: 'Marco (H)', qtd: 2, cod: '', calc: 'H', esp: '' },
-            { mat: 'Perfil', cat: 'Folha (L)', qtd: 2, cod: '', calc: 'L - ', esp: '' },
-            { mat: 'Perfil', cat: 'Folha (H)', qtd: 2, cod: '', calc: 'H - ', esp: '' },
-            { mat: 'Perfil', cat: 'Baguete (L)', qtd: 2, cod: '', calc: '', esp: '' },
-            { mat: 'Perfil', cat: 'Baguete (H)', qtd: 2, cod: '', calc: '', esp: '' },
-            { mat: 'Vidro', cat: 'Vidro', qtd: 1, cod: 'Vidro Incolor', calc: 'L:   x H:  ', esp: '6mm' }
-        ],
-        'porta_giro': [
-            { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: '', calc: 'H', esp: '' },
-            { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: '', calc: 'L', esp: '' },
-            { mat: 'Perfil', cat: 'Montante (Folha)', qtd: 2, cod: '', calc: 'H - ', esp: '' },
-            { mat: 'Perfil', cat: 'Travessa Sup/Inf', qtd: 2, cod: '', calc: 'L - ', esp: '' },
-            { mat: 'Perfil', cat: 'Baguete', qtd: 4, cod: '', calc: '', esp: '' },
-            { mat: 'Vidro', cat: 'Vidro', qtd: 1, cod: 'Vidro Incolor', calc: 'L:   x H:  ', esp: '6mm' }
-        ]
+        'janela_correr_2f': {
+            'suprema': [
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+48', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+48', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU001', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU002', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU003', calc: 'H', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Sup/Inf', qtd: 4, cod: 'SU053', calc: '((L-131)/2)', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 1, cod: 'SU040', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 1, cod: 'SU041', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 4, cod: 'SU102', calc: '((L-131)/2)', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 4, cod: 'SU102', calc: 'H-152', esp: '' },
+                { mat: 'Vidro', cat: 'Vidro', qtd: 2, cod: 'Vidro Incolor', calcL: '(((L-131)/2)-6)', calcH: '((H-50)-84)', esp: '6mm' }
+            ],
+            'gold': []
+        },
+        'janela_correr_3f': {
+            'suprema': [
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+48', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+48', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU010', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU011', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU012', calc: 'H', esp: '' },
+                { mat: 'Perfil', cat: 'Mata Junta', qtd: 1, cod: 'SU302', calc: '((H-50)+20)', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Sup/Inf', qtd: 6, cod: 'SU053', calc: '((L-156)/3)', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 2, cod: 'SU040', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 2, cod: 'SU041', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 6, cod: 'SU102', calc: '((L-156)/3)', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 6, cod: 'SU102', calc: '((H-50)-102)', esp: '' },
+                { mat: 'Vidro', cat: 'Vidro', qtd: 3, cod: 'Vidro Incolor', calcL: '(((L-156)/3)-6)', calcH: '((H-50)-84)', esp: '6mm' }
+            ],
+            'gold': []
+        },
+        'janela_correr_4f_central': {
+            'suprema': [
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+48', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+48', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU001', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU002', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU003', calc: 'H', esp: '' },
+                { mat: 'Perfil', cat: 'Mata Junta Central', qtd: 1, cod: 'SU291', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Sup/Inf', qtd: 8, cod: 'SU053', calc: '((L-233)/4)', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Central', qtd: 2, cod: 'SU039', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 2, cod: 'SU040', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 2, cod: 'SU041', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 8, cod: 'SU102', calc: '((L-233)/4)', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 8, cod: 'SU102', calc: '((H-50)-102)', esp: '' },
+                { mat: 'Vidro', cat: 'Vidro', qtd: 4, cod: 'Vidro Incolor', calcL: '(((L-233)/4)-6)', calcH: '((H-50)-84)', esp: '6mm' }
+            ],
+            'gold': []
+        },
+        'janela_correr_4f_sequencial': {
+            'suprema': [
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+48', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+48', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU121', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU122', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU123', calc: 'H', esp: '' },
+                { mat: 'Perfil', cat: 'Mata Junta', qtd: 1, cod: 'SU302', calc: '((H-50)+20)', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Sup/Inf', qtd: 8, cod: 'SU053', calc: '((L-174)/4)', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 3, cod: 'SU040', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 3, cod: 'SU041', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 8, cod: 'SU102', calc: '((L-174)/4)', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 8, cod: 'SU102', calc: '((H-50)-102)', esp: '' },
+                { mat: 'Vidro', cat: 'Vidro', qtd: 4, cod: 'Vidro Incolor', calcL: '(((L-174)/4)-6)', calcH: '((H-50)-84)', esp: '6mm' }
+            ],
+            'gold': []
+        },
+        'janela_correr_6f': {
+            'suprema': [
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+48', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+48', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU010', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU011', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU013', calc: 'H', esp: '' },
+                { mat: 'Perfil', cat: 'Mata Junta', qtd: 1, cod: 'SU291', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Sup/Inf', qtd: 12, cod: 'SU053', calc: '((L-270)/6)', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 4, cod: 'SU040', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 4, cod: 'SU041', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 12, cod: 'SU102', calc: '((L-270)/6)', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 12, cod: 'SU102', calc: '((H-50)-102)', esp: '' },
+                { mat: 'Vidro', cat: 'Vidro', qtd: 6, cod: 'Vidro Incolor', calcL: '(((L-270/6)-6)', calcH: '((H-50)-84)', esp: '6mm' }
+            ],
+            'gold': []
+        },
+        
+        'porta_correr_2f': {
+            'suprema': [
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM060', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM068', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM060', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 1, cod: 'RM005', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Soleira', qtd: 1, cod: 'RM018', calc: 'L+44', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU001', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU228', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU003', calc: 'H', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Sup', qtd: 2, cod: 'SU053', calc: '((L-131)/2)', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Inf', qtd: 2, cod: 'SU225', calc: '((L-131)/2)', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU044', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 1, cod: 'SU040', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 1, cod: 'SU049', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 4, cod: 'SU102', calc: '((L-131)/2)', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 4, cod: 'SU102', calc: '((H-50)-102)', esp: '' },
+                { mat: 'Vidro', cat: 'Vidro', qtd: 2, cod: 'Vidro Incolor', calcL: '(((L-131)/2)-6)', calcH: '((H-50)-133)', esp: '6mm' }
+            ],
+            'gold': []
+        },
+        'porta_correr_3f': {
+            'suprema': [
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM060', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM068', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM060', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 1, cod: 'RM005', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Soleira', qtd: 1, cod: 'RM018', calc: 'L+44', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU010', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU230', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU012', calc: 'H', esp: '' },
+                { mat: 'Perfil', cat: 'Mata Junta', qtd: 1, cod: 'SU302', calc: '((H-50)+20)', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Sup', qtd: 3, cod: 'SU053', calc: '((L-156)/3)', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Inf', qtd: 3, cod: 'SU225', calc: '((L-156)/3)', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU044', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 2, cod: 'SU040', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 2, cod: 'SU049', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 6, cod: 'SU102', calc: '((L-156)/3)', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 6, cod: 'SU102', calc: '((H-50)-102)', esp: '' },
+                { mat: 'Vidro', cat: 'Vidro', qtd: 3, cod: 'Vidro Incolor', calcL: '(((L-156)/3)-6)', calcH: '((H-50)-133)', esp: '6mm' }
+            ],
+            'gold': []
+        },
+        'porta_correr_4f_central': {
+            'suprema': [
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM060', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM068', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM060', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 1, cod: 'RM005', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Soleira', qtd: 1, cod: 'RM018', calc: 'L+44', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU001', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU228', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU003', calc: 'H', esp: '' },
+                { mat: 'Perfil', cat: 'Mata Junta Central', qtd: 1, cod: 'SU291', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Sup', qtd: 4, cod: 'SU053', calc: '((L-233)/4)', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Inf', qtd: 4, cod: 'SU225', calc: '((L-233)/4)', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Central', qtd: 2, cod: 'SU039', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 2, cod: 'SU040', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 2, cod: 'SU041', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 8, cod: 'SU102', calc: '((L-233)/4)', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 8, cod: 'SU102', calc: '((H-50)-102)', esp: '' },
+                { mat: 'Vidro', cat: 'Vidro', qtd: 4, cod: 'Vidro Incolor', calcL: '(((L-233)/4)-6)', calcH: '((H-50)-133)', esp: '6mm' }
+            ],
+            'gold': []
+        },
+        'porta_correr_4f_sequencial': {
+            'suprema': [
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM060', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM068', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM060', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 1, cod: 'RM005', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Soleira', qtd: 1, cod: 'RM018', calc: 'L+44', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU121', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU122', calc: 'L-26', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU123', calc: 'H', esp: '' },
+                { mat: 'Perfil', cat: 'Mata Junta', qtd: 2, cod: 'SU302', calc: '((H-50)+20)', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Sup', qtd: 4, cod: 'SU053', calc: '((L-174)/4)', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Inf', qtd: 4, cod: 'SU225', calc: '((L-174)/4)', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 3, cod: 'SU040', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 3, cod: 'SU041', calc: 'H-50', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 8, cod: 'SU102', calc: '((L-174)/4)', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 8, cod: 'SU102', calc: '((H-50)-102)', esp: '' },
+                { mat: 'Vidro', cat: 'Vidro', qtd: 4, cod: 'Vidro Incolor', calcL: '(((L-174)/4)-6)', calcH: '((H-50)-133)', esp: '6mm' }
+            ],
+            'gold': []
+        },
+        'porta_correr_6f': { 'suprema': [], 'gold': [] },
+        
+        'fixo': {
+            'suprema': [
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Marco (L)', qtd: 2, cod: 'SU079', calc: 'L', esp: '' },
+                { mat: 'Perfil', cat: 'Marco (H)', qtd: 2, cod: 'SU079', calc: 'H', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 2, cod: 'SU102', calc: '((L-33)-7)', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 2, cod: 'SU102', calc: 'H-70', esp: '' },
+                { mat: 'Vidro', cat: 'Vidro', qtd: 1, cod: 'Vidro Incolor', calcL: '(((L-33)-7)-13)', calcH: '((H-70)+25)', esp: '6mm' }
+            ],
+            'gold': []
+        },
+        
+        'maximar': {
+            'suprema': [
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Marco (H)', qtd: 2, cod: 'SU079', calc: 'H', esp: '' },
+                { mat: 'Perfil', cat: 'Marco (L)', qtd: 2, cod: 'SU079', calc: 'L', esp: '' },
+                { mat: 'Perfil', cat: 'Pingadeira', qtd: 1, cod: 'SU276', calc: 'L', esp: '' },
+                { mat: 'Perfil', cat: 'Travessa Sup', qtd: 1, cod: 'SU080', calc: '((L-30)-25)', esp: '' },
+                { mat: 'Perfil', cat: 'Travessa Inf', qtd: 1, cod: 'SU081', calc: 'L-30', esp: '' },
+                { mat: 'Perfil', cat: 'Montante Folha', qtd: 2, cod: 'SU081', calc: 'H-30', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 2, cod: 'SU102', calc: '((L-30)-85)', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 2, cod: 'SU102', calc: '((H-30)-85)', esp: '' },
+                { mat: 'Vidro', cat: 'Vidro', qtd: 1, cod: 'Vidro Incolor', calcL: '((L-30)-67)', calcH: '((H-30)-67)', esp: '6mm' }
+            ],
+            'gold': []
+        },
+        
+        'porta_giro': {
+            'suprema': [
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM200', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 1, cod: 'RM005', calc: 'L+24', esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU279', calc: 'H', esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU279', calc: 'L', esp: '' },
+                { mat: 'Perfil', cat: 'Batedeira', qtd: 1, cod: '25548', calc: 'H-40', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU111', calc: 'H-40', esp: '' },
+                { mat: 'Perfil', cat: 'Folha Sup/Inf', qtd: 2, cod: 'SU111', calc: '((L-168)+100)', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 2, cod: 'SU102', calc: 'L-168', esp: '' },
+                { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 2, cod: 'SU102', calc: '((H-70)-124)', esp: '' },
+                { mat: 'Vidro', cat: 'Vidro', qtd: 1, cod: 'Vidro Incolor', calcL: '((L-168)-6)', calcH: '((H-124)+18)', esp: '6mm' }
+            ],
+            'gold': []
+        }
     };
 
     function carregarModelo() {
         const modeloId = document.getElementById("modelo_base").value;
+        const linhaId = document.getElementById("linha_base").value;
+        
         if (!modeloId) {
-            alert("Selecione um modelo na lista primeiro.");
+            alert("Selecione um modelo de esquadria primeiro.");
             return;
         }
 
-        const template = templates[modeloId];
-        
-        if (listaDeItens.length > 0) {
-            if (!confirm("Isso vai adicionar os itens à sua lista atual. Continuar?")) return;
+        listaDeItens = [];
+
+        const templateData = templates[modeloId];
+        if(!templateData || !templateData[linhaId] || templateData[linhaId].length === 0) {
+            alert(`A configuração para este modelo na linha "${linhaId.toUpperCase()}" ainda não foi mapeada no sistema. Você pode adicionar os itens manualmente.`);
+            atualizarTabela();
+            return;
         }
 
+        const template = templateData[linhaId];
+        
         template.forEach(item => {
             idCounter++;
             listaDeItens.push({
@@ -440,14 +724,15 @@
                 categoria: item.cat,
                 qtd: item.qtd,
                 codigo: item.cod,
-                calculo: item.calc,
+                calculo: item.calc || '',
+                calcL: item.calcL || '',
+                calcH: item.calcH || '',
                 espessura: item.esp
             });
         });
 
         atualizarTabela();
-        // Não limpa o select para que o desenho continue visível como referência
-        // document.getElementById("modelo_base").value = ""; 
+        atualizarLinhaProjeto();
     }
 
     function adicionarItemManual() {
@@ -462,6 +747,8 @@
             qtd: 1,
             codigo: '',
             calculo: '',
+            calcL: '',
+            calcH: '',
             espessura: mat === 'Vidro' ? '6mm' : ''
         });
 
@@ -497,6 +784,19 @@
             if(item.material === 'Vidro') matIcon = '<i class="fas fa-border-all" style="color:#0dcaf0"></i> ';
             if(item.material === 'Acessório') matIcon = '<i class="fas fa-cogs" style="color:#fd7e14"></i> ';
 
+            let inputMedida = '';
+            if (item.material === 'Vidro') {
+                inputMedida = `
+                    <div style="display:flex; gap:5px; align-items:center;">
+                        <input type="text" class="input-vidro" value="${item.calcL || ''}" onchange="atualizarCampo(${item.id}, 'calcL', this.value)" placeholder="Largura (L)">
+                        <span>x</span>
+                        <input type="text" class="input-vidro" value="${item.calcH || ''}" onchange="atualizarCampo(${item.id}, 'calcH', this.value)" placeholder="Altura (H)">
+                    </div>
+                `;
+            } else {
+                inputMedida = `<input type="text" class="input-calc" value="${item.calculo || ''}" onchange="atualizarCampo(${item.id}, 'calculo', this.value)" placeholder="Ex: L - 24">`;
+            }
+
             tr.innerHTML = `
                 <td data-label="Material">${matIcon} <b>${item.material}</b></td>
                 <td data-label="Categoria">
@@ -509,7 +809,7 @@
                     <input type="text" class="input-code" value="${item.codigo}" onchange="atualizarCampo(${item.id}, 'codigo', this.value)" placeholder="Ex: SU001">
                 </td>
                 <td data-label="Cálculo">
-                    <input type="text" class="input-calc" value="${item.calculo}" onchange="atualizarCampo(${item.id}, 'calculo', this.value)" placeholder="Ex: L - 24">
+                    ${inputMedida}
                 </td>
                 <td data-label="Espessura">
                     <input type="text" value="${item.espessura}" onchange="atualizarCampo(${item.id}, 'espessura', this.value)" placeholder="Esp." style="width: 70px;">
@@ -546,12 +846,11 @@
             row[11] = item.qtd;     
             row[17] = item.espessura;
             
-            if (item.material === "Vidro" && item.calculo.includes("x")) {
-                let partes = item.calculo.split("x");
-                row[12] = partes[0].replace(/L:/g, "").trim(); 
-                row[13] = partes[1].replace(/H:/g, "").trim(); 
+            if (item.material === "Vidro") {
+                row[12] = item.calcL; // L
+                row[13] = item.calcH; // H
             } else {
-                row[10] = item.calculo; 
+                row[10] = item.calculo; // COMPRIMENTO
             }
             
             data.push(row);
