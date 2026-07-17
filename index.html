@@ -645,55 +645,70 @@
         return isNaN(v) ? null : v;
     }
 
-    // Contramarco: vão + 2×encaixe (o perfil é cortado a 45° e passa
-    // "encaixe" mm de cada lado do vão). Ex: CM200, CM060, CM098, CM068.
-    function pContramarco(cod, direcao) {
-        return (L, H) => {
+    // Contramarco: vão + 2×encaixe DO PRÓPRIO PERFIL DA LINHA (item.codigo).
+    // Ex: CM200, CM060, CM098, CM068 — se você trocar o código da linha,
+    // o cálculo passa a usar o encaixe do novo código automaticamente.
+    function rContramarco(direcao) {
+        return (item, lista, L, H) => {
             const base = direcao === 'L' ? L : H;
-            const real = valorCatalogo(cod, 'encaixe');
+            const real = valorCatalogo(item.codigo, 'encaixe');
             const enc = real !== null ? real : FALLBACK_ENCAIXE_CONTRAMARCO;
-            return { valor: base + 2 * enc, assumido: real === null, refs: [cod] };
+            return { valor: base + 2 * enc, assumido: real === null, refs: [item.codigo] };
         };
     }
 
-    // Arremate: vão + (lados × encaixe). RM005 soma 24 por lado — 1 lado
-    // em portas/fixo/maximar/porta-giro, 2 lados em janelas de correr.
-    function pArremate(cod, direcao, lados) {
-        return (L, H) => {
+    // Arremate: vão + (lados × encaixe do próprio perfil da linha).
+    function rArremate(direcao, lados) {
+        return (item, lista, L, H) => {
             const base = direcao === 'L' ? L : H;
-            const enc = valorCatalogo(cod, 'encaixe');
-            if (enc === null) return { valor: null, assumido: false, refs: [cod] };
-            return { valor: base + lados * enc, assumido: false, refs: [cod] };
+            const enc = valorCatalogo(item.codigo, 'encaixe');
+            if (enc === null) return { valor: null, assumido: false, refs: [item.codigo] };
+            return { valor: base + lados * enc, assumido: false, refs: [item.codigo] };
         };
     }
 
-    // Soleira: vão + 2×encaixe (RM018 — padronizado como valor "por lado").
-    function pSoleira(cod, direcao) {
-        return (L, H) => {
+    // Soleira: vão + 2×encaixe do próprio perfil da linha (RM018).
+    function rSoleira(direcao) {
+        return (item, lista, L, H) => {
             const base = direcao === 'L' ? L : H;
-            const enc = valorCatalogo(cod, 'encaixe');
-            if (enc === null) return { valor: null, assumido: false, refs: [cod] };
-            return { valor: base + 2 * enc, assumido: false, refs: [cod] };
+            const enc = valorCatalogo(item.codigo, 'encaixe');
+            if (enc === null) return { valor: null, assumido: false, refs: [item.codigo] };
+            return { valor: base + 2 * enc, assumido: false, refs: [item.codigo] };
         };
     }
 
-    // Marco Superior/Inferior: vão − 2×encaixe do Marco Lateral correspondente
-    // (o desconto não é do próprio perfil, é do marco lateral que "abraça" ele).
-    // Ex: SU001/SU002 usam o encaixe do SU003; SU010/SU011 usam SU012 ou SU013.
-    function pMarcoSupInf(direcao, refLateralCod) {
-        return (L, H) => {
+    // Acha, na lista atual da tela, qual código está ocupando um papel
+    // (ex: "Marco Lateral"). Assim a referência sempre segue o código que
+    // está de fato na tabela, mesmo que você tenha trocado.
+    function buscarCodigoPorCategoria(lista, categoria) {
+        const achado = lista.find(i => i.categoria === categoria);
+        return achado ? achado.codigo : null;
+    }
+
+    // Marco Superior/Inferior: vão − 2×encaixe de quem estiver, na lista
+    // atual, no papel de "Marco Lateral".
+    function rMarcoSupInf(direcao) {
+        return (item, lista, L, H) => {
             const base = direcao === 'L' ? L : H;
-            const real = valorCatalogo(refLateralCod, 'encaixe');
+            const codLateral = buscarCodigoPorCategoria(lista, 'Marco Lateral');
+            if (!codLateral) return { valor: null, assumido: false, refs: ['(Marco Lateral não encontrado na lista)'] };
+            const real = valorCatalogo(codLateral, 'encaixe');
             const enc = real !== null ? real : FALLBACK_ENCAIXE_MARCO_LATERAL;
-            return { valor: base - 2 * enc, assumido: real === null, refs: [refLateralCod] };
+            return { valor: base - 2 * enc, assumido: real === null, refs: [codLateral] };
         };
     }
 
-    // Folha/Mão de Amigo/Mata Junta (altura): vão − recuo do marco superior
-    // − recuo do marco inferior. Ex: H-50 = H − 25(sup) − 25(inf).
-    function pFolhaAltura(direcao, codSup, codInf) {
-        return (L, H) => {
+    // Folha/Mão de Amigo/Mata Junta (altura): vão − recuo de quem estiver
+    // no papel de "Marco Superior" − recuo de quem estiver no papel de
+    // "Marco Inferior", na lista atual da tela.
+    function rFolhaAltura(direcao) {
+        return (item, lista, L, H) => {
             const base = direcao === 'L' ? L : H;
+            const codSup = buscarCodigoPorCategoria(lista, 'Marco Superior');
+            const codInf = buscarCodigoPorCategoria(lista, 'Marco Inferior');
+            if (!codSup || !codInf) {
+                return { valor: null, assumido: false, refs: [codSup || '(Marco Superior?)', codInf || '(Marco Inferior?)'] };
+            }
             const realS = valorCatalogo(codSup, 'folgaVidro');
             const realI = valorCatalogo(codInf, 'folgaVidro');
             const vs = realS !== null ? realS : FALLBACK_RECUO_MARCO_SUP_INF;
@@ -702,11 +717,10 @@
         };
     }
 
-    // Mata Junta (tipologias sequenciais): mesma conta do H-50, +20mm fixos
-    // (folga própria do SU302, ainda sem base no catálogo).
-    function pMataJuntaSequencial(direcao, codSup, codInf) {
-        return (L, H) => {
-            const r = pFolhaAltura(direcao, codSup, codInf)(L, H);
+    // Mata Junta (tipologias sequenciais): mesma conta do H-50, +20mm fixos.
+    function rMataJuntaSequencial(direcao) {
+        return (item, lista, L, H) => {
+            const r = rFolhaAltura(direcao)(item, lista, L, H);
             if (r.valor === null) return r;
             return { valor: r.valor + 20, assumido: r.assumido, refs: r.refs };
         };
@@ -715,17 +729,17 @@
     const templates = {
         'janela_correr_2f': {
             'suprema': [
-                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', param: pContramarco('CM200','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', param: pContramarco('CM200','H'), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+48', param: pArremate('RM005','L',2), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+48', param: pArremate('RM005','H',2), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU001', calc: 'L-26', param: pMarcoSupInf('L','SU003'), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU002', calc: 'L-26', param: pMarcoSupInf('L','SU003'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', param: rContramarco('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', param: rContramarco('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+48', param: rArremate('L',2), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+48', param: rArremate('H',2), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU001', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU002', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
                 { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU003', calc: 'H', esp: '' },
                 { mat: 'Perfil', cat: 'Folha Sup/Inf', qtd: 4, cod: 'SU053', calc: '((L-131)/2)', esp: '' },
-                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', param: pFolhaAltura('H','SU001','SU002'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 1, cod: 'SU040', calc: 'H-50', param: pFolhaAltura('H','SU001','SU002'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 1, cod: 'SU041', calc: 'H-50', param: pFolhaAltura('H','SU001','SU002'), esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 1, cod: 'SU040', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 1, cod: 'SU041', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 4, cod: 'SU102', calc: '((L-131)/2)', esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 4, cod: 'SU102', calc: 'H-152', esp: '' },
                 { mat: 'Vidro', cat: 'Vidro', qtd: 2, cod: 'Vidro Incolor', calcL: '(((L-131)/2)-6)', calcH: '((H-50)-84)', esp: '6mm' }
@@ -734,18 +748,18 @@
         },
         'janela_correr_3f': {
             'suprema': [
-                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', param: pContramarco('CM200','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', param: pContramarco('CM200','H'), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+48', param: pArremate('RM005','L',2), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+48', param: pArremate('RM005','H',2), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU010', calc: 'L-26', param: pMarcoSupInf('L','SU012'), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU011', calc: 'L-26', param: pMarcoSupInf('L','SU012'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', param: rContramarco('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', param: rContramarco('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+48', param: rArremate('L',2), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+48', param: rArremate('H',2), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU010', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU011', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
                 { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU012', calc: 'H', esp: '' },
-                { mat: 'Perfil', cat: 'Mata Junta', qtd: 1, cod: 'SU302', calc: '((H-50)+20)', param: pMataJuntaSequencial('H','SU010','SU011'), esp: '' },
+                { mat: 'Perfil', cat: 'Mata Junta', qtd: 1, cod: 'SU302', calc: '((H-50)+20)', param: rMataJuntaSequencial('H'), esp: '' },
                 { mat: 'Perfil', cat: 'Folha Sup/Inf', qtd: 6, cod: 'SU053', calc: '((L-156)/3)', esp: '' },
-                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', param: pFolhaAltura('H','SU010','SU011'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 2, cod: 'SU040', calc: 'H-50', param: pFolhaAltura('H','SU010','SU011'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 2, cod: 'SU041', calc: 'H-50', param: pFolhaAltura('H','SU010','SU011'), esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 2, cod: 'SU040', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 2, cod: 'SU041', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 6, cod: 'SU102', calc: '((L-156)/3)', esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 6, cod: 'SU102', calc: '((H-50)-102)', esp: '' },
                 { mat: 'Vidro', cat: 'Vidro', qtd: 3, cod: 'Vidro Incolor', calcL: '(((L-156)/3)-6)', calcH: '((H-50)-84)', esp: '6mm' }
@@ -754,19 +768,19 @@
         },
         'janela_correr_4f_central': {
             'suprema': [
-                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', param: pContramarco('CM200','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', param: pContramarco('CM200','H'), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+48', param: pArremate('RM005','L',2), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+48', param: pArremate('RM005','H',2), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU001', calc: 'L-26', param: pMarcoSupInf('L','SU003'), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU002', calc: 'L-26', param: pMarcoSupInf('L','SU003'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', param: rContramarco('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', param: rContramarco('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+48', param: rArremate('L',2), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+48', param: rArremate('H',2), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU001', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU002', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
                 { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU003', calc: 'H', esp: '' },
-                { mat: 'Perfil', cat: 'Mata Junta Central', qtd: 1, cod: 'SU291', calc: 'H-50', param: pFolhaAltura('H','SU001','SU002'), esp: '' },
+                { mat: 'Perfil', cat: 'Mata Junta Central', qtd: 1, cod: 'SU291', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
                 { mat: 'Perfil', cat: 'Folha Sup/Inf', qtd: 8, cod: 'SU053', calc: '((L-233)/4)', esp: '' },
-                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', param: pFolhaAltura('H','SU001','SU002'), esp: '' },
-                { mat: 'Perfil', cat: 'Folha Central', qtd: 2, cod: 'SU039', calc: 'H-50', param: pFolhaAltura('H','SU001','SU002'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 2, cod: 'SU040', calc: 'H-50', param: pFolhaAltura('H','SU001','SU002'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 2, cod: 'SU041', calc: 'H-50', param: pFolhaAltura('H','SU001','SU002'), esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Folha Central', qtd: 2, cod: 'SU039', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 2, cod: 'SU040', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 2, cod: 'SU041', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 8, cod: 'SU102', calc: '((L-233)/4)', esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 8, cod: 'SU102', calc: '((H-50)-102)', esp: '' },
                 { mat: 'Vidro', cat: 'Vidro', qtd: 4, cod: 'Vidro Incolor', calcL: '(((L-233)/4)-6)', calcH: '((H-50)-84)', esp: '6mm' }
@@ -775,18 +789,18 @@
         },
         'janela_correr_4f_sequencial': {
             'suprema': [
-                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', param: pContramarco('CM200','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', param: pContramarco('CM200','H'), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+48', param: pArremate('RM005','L',2), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+48', param: pArremate('RM005','H',2), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU121', calc: 'L-26', param: pMarcoSupInf('L','SU123'), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU122', calc: 'L-26', param: pMarcoSupInf('L','SU123'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', param: rContramarco('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', param: rContramarco('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+48', param: rArremate('L',2), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+48', param: rArremate('H',2), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU121', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU122', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
                 { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU123', calc: 'H', esp: '' },
-                { mat: 'Perfil', cat: 'Mata Junta', qtd: 1, cod: 'SU302', calc: '((H-50)+20)', param: pMataJuntaSequencial('H','SU121','SU122'), esp: '' },
+                { mat: 'Perfil', cat: 'Mata Junta', qtd: 1, cod: 'SU302', calc: '((H-50)+20)', param: rMataJuntaSequencial('H'), esp: '' },
                 { mat: 'Perfil', cat: 'Folha Sup/Inf', qtd: 8, cod: 'SU053', calc: '((L-174)/4)', esp: '' },
-                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', param: pFolhaAltura('H','SU121','SU122'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 3, cod: 'SU040', calc: 'H-50', param: pFolhaAltura('H','SU121','SU122'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 3, cod: 'SU041', calc: 'H-50', param: pFolhaAltura('H','SU121','SU122'), esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 3, cod: 'SU040', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 3, cod: 'SU041', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 8, cod: 'SU102', calc: '((L-174)/4)', esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 8, cod: 'SU102', calc: '((H-50)-102)', esp: '' },
                 { mat: 'Vidro', cat: 'Vidro', qtd: 4, cod: 'Vidro Incolor', calcL: '(((L-174)/4)-6)', calcH: '((H-50)-84)', esp: '6mm' }
@@ -795,18 +809,18 @@
         },
         'janela_correr_6f': {
             'suprema': [
-                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', param: pContramarco('CM200','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', param: pContramarco('CM200','H'), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+48', param: pArremate('RM005','L',2), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+48', param: pArremate('RM005','H',2), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU010', calc: 'L-26', param: pMarcoSupInf('L','SU013'), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU011', calc: 'L-26', param: pMarcoSupInf('L','SU013'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', param: rContramarco('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', param: rContramarco('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+48', param: rArremate('L',2), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+48', param: rArremate('H',2), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU010', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU011', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
                 { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU013', calc: 'H', esp: '' },
-                { mat: 'Perfil', cat: 'Mata Junta', qtd: 1, cod: 'SU291', calc: 'H-50', param: pFolhaAltura('H','SU010','SU011'), esp: '' },
+                { mat: 'Perfil', cat: 'Mata Junta', qtd: 1, cod: 'SU291', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
                 { mat: 'Perfil', cat: 'Folha Sup/Inf', qtd: 12, cod: 'SU053', calc: '((L-270)/6)', esp: '' },
-                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', param: pFolhaAltura('H','SU010','SU011'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 4, cod: 'SU040', calc: 'H-50', param: pFolhaAltura('H','SU010','SU011'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 4, cod: 'SU041', calc: 'H-50', param: pFolhaAltura('H','SU010','SU011'), esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 4, cod: 'SU040', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 4, cod: 'SU041', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 12, cod: 'SU102', calc: '((L-270)/6)', esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 12, cod: 'SU102', calc: '((H-50)-102)', esp: '' },
                 { mat: 'Vidro', cat: 'Vidro', qtd: 6, cod: 'Vidro Incolor', calcL: '(((L-270)/6)-6)', calcH: '((H-50)-84)', esp: '6mm' }
@@ -816,20 +830,20 @@
         
         'porta_correr_2f': {
             'suprema': [
-                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM060', calc: 'L+24', param: pContramarco('CM060','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM068', calc: 'L+24', param: pContramarco('CM068','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM060', calc: 'H+24', param: pContramarco('CM060','H'), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 1, cod: 'RM005', calc: 'L+24', param: pArremate('RM005','L',1), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', param: pArremate('RM005','H',1), esp: '' },
-                { mat: 'Perfil', cat: 'Soleira', qtd: 1, cod: 'RM018', calc: 'L+44', param: pSoleira('RM018','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU001', calc: 'L-26', param: pMarcoSupInf('L','SU003'), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU228', calc: 'L-26', param: pMarcoSupInf('L','SU003'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM060', calc: 'L+24', param: rContramarco('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM068', calc: 'L+24', param: rContramarco('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM060', calc: 'H+24', param: rContramarco('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 1, cod: 'RM005', calc: 'L+24', param: rArremate('L',1), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', param: rArremate('H',1), esp: '' },
+                { mat: 'Perfil', cat: 'Soleira', qtd: 1, cod: 'RM018', calc: 'L+44', param: rSoleira('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU001', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU228', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
                 { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU003', calc: 'H', esp: '' },
                 { mat: 'Perfil', cat: 'Folha Sup', qtd: 2, cod: 'SU053', calc: '((L-131)/2)', esp: '' },
                 { mat: 'Perfil', cat: 'Folha Inf', qtd: 2, cod: 'SU225', calc: '((L-131)/2)', esp: '' },
-                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU044', calc: 'H-50', param: pFolhaAltura('H','SU001','SU228'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 1, cod: 'SU040', calc: 'H-50', param: pFolhaAltura('H','SU001','SU228'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 1, cod: 'SU049', calc: 'H-50', param: pFolhaAltura('H','SU001','SU228'), esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU044', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 1, cod: 'SU040', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 1, cod: 'SU049', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 4, cod: 'SU102', calc: '((L-131)/2)', esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 4, cod: 'SU102', calc: '((H-50)-102)', esp: '' },
                 { mat: 'Vidro', cat: 'Vidro', qtd: 2, cod: 'Vidro Incolor', calcL: '(((L-131)/2)-6)', calcH: '((H-50)-133)', esp: '6mm' }
@@ -838,21 +852,21 @@
         },
         'porta_correr_3f': {
             'suprema': [
-                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM060', calc: 'L+24', param: pContramarco('CM060','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM068', calc: 'L+24', param: pContramarco('CM068','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM060', calc: 'H+24', param: pContramarco('CM060','H'), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 1, cod: 'RM005', calc: 'L+24', param: pArremate('RM005','L',1), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', param: pArremate('RM005','H',1), esp: '' },
-                { mat: 'Perfil', cat: 'Soleira', qtd: 1, cod: 'RM018', calc: 'L+44', param: pSoleira('RM018','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU010', calc: 'L-26', param: pMarcoSupInf('L','SU012'), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU230', calc: 'L-26', param: pMarcoSupInf('L','SU012'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM060', calc: 'L+24', param: rContramarco('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM068', calc: 'L+24', param: rContramarco('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM060', calc: 'H+24', param: rContramarco('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 1, cod: 'RM005', calc: 'L+24', param: rArremate('L',1), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', param: rArremate('H',1), esp: '' },
+                { mat: 'Perfil', cat: 'Soleira', qtd: 1, cod: 'RM018', calc: 'L+44', param: rSoleira('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU010', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU230', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
                 { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU012', calc: 'H', esp: '' },
-                { mat: 'Perfil', cat: 'Mata Junta', qtd: 1, cod: 'SU302', calc: '((H-50)+20)', param: pMataJuntaSequencial('H','SU010','SU230'), esp: '' },
+                { mat: 'Perfil', cat: 'Mata Junta', qtd: 1, cod: 'SU302', calc: '((H-50)+20)', param: rMataJuntaSequencial('H'), esp: '' },
                 { mat: 'Perfil', cat: 'Folha Sup', qtd: 3, cod: 'SU053', calc: '((L-156)/3)', esp: '' },
                 { mat: 'Perfil', cat: 'Folha Inf', qtd: 3, cod: 'SU225', calc: '((L-156)/3)', esp: '' },
-                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU044', calc: 'H-50', param: pFolhaAltura('H','SU010','SU230'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 2, cod: 'SU040', calc: 'H-50', param: pFolhaAltura('H','SU010','SU230'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 2, cod: 'SU049', calc: 'H-50', param: pFolhaAltura('H','SU010','SU230'), esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU044', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 2, cod: 'SU040', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 2, cod: 'SU049', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 6, cod: 'SU102', calc: '((L-156)/3)', esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 6, cod: 'SU102', calc: '((H-50)-102)', esp: '' },
                 { mat: 'Vidro', cat: 'Vidro', qtd: 3, cod: 'Vidro Incolor', calcL: '(((L-156)/3)-6)', calcH: '((H-50)-133)', esp: '6mm' }
@@ -861,22 +875,22 @@
         },
         'porta_correr_4f_central': {
             'suprema': [
-                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM060', calc: 'L+24', param: pContramarco('CM060','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM068', calc: 'L+24', param: pContramarco('CM068','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM060', calc: 'H+24', param: pContramarco('CM060','H'), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 1, cod: 'RM005', calc: 'L+24', param: pArremate('RM005','L',1), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', param: pArremate('RM005','H',1), esp: '' },
-                { mat: 'Perfil', cat: 'Soleira', qtd: 1, cod: 'RM018', calc: 'L+44', param: pSoleira('RM018','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU001', calc: 'L-26', param: pMarcoSupInf('L','SU003'), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU228', calc: 'L-26', param: pMarcoSupInf('L','SU003'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM060', calc: 'L+24', param: rContramarco('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM068', calc: 'L+24', param: rContramarco('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM060', calc: 'H+24', param: rContramarco('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 1, cod: 'RM005', calc: 'L+24', param: rArremate('L',1), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', param: rArremate('H',1), esp: '' },
+                { mat: 'Perfil', cat: 'Soleira', qtd: 1, cod: 'RM018', calc: 'L+44', param: rSoleira('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU001', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU228', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
                 { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU003', calc: 'H', esp: '' },
-                { mat: 'Perfil', cat: 'Mata Junta Central', qtd: 1, cod: 'SU291', calc: 'H-50', param: pFolhaAltura('H','SU001','SU228'), esp: '' },
+                { mat: 'Perfil', cat: 'Mata Junta Central', qtd: 1, cod: 'SU291', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
                 { mat: 'Perfil', cat: 'Folha Sup', qtd: 4, cod: 'SU053', calc: '((L-233)/4)', esp: '' },
                 { mat: 'Perfil', cat: 'Folha Inf', qtd: 4, cod: 'SU225', calc: '((L-233)/4)', esp: '' },
-                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', param: pFolhaAltura('H','SU001','SU228'), esp: '' },
-                { mat: 'Perfil', cat: 'Folha Central', qtd: 2, cod: 'SU039', calc: 'H-50', param: pFolhaAltura('H','SU001','SU228'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 2, cod: 'SU040', calc: 'H-50', param: pFolhaAltura('H','SU001','SU228'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 2, cod: 'SU041', calc: 'H-50', param: pFolhaAltura('H','SU001','SU228'), esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Folha Central', qtd: 2, cod: 'SU039', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 2, cod: 'SU040', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 2, cod: 'SU041', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 8, cod: 'SU102', calc: '((L-233)/4)', esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 8, cod: 'SU102', calc: '((H-50)-102)', esp: '' },
                 { mat: 'Vidro', cat: 'Vidro', qtd: 4, cod: 'Vidro Incolor', calcL: '(((L-233)/4)-6)', calcH: '((H-50)-133)', esp: '6mm' }
@@ -885,21 +899,21 @@
         },
         'porta_correr_4f_sequencial': {
             'suprema': [
-                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM060', calc: 'L+24', param: pContramarco('CM060','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM068', calc: 'L+24', param: pContramarco('CM068','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM060', calc: 'H+24', param: pContramarco('CM060','H'), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 1, cod: 'RM005', calc: 'L+24', param: pArremate('RM005','L',1), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', param: pArremate('RM005','H',1), esp: '' },
-                { mat: 'Perfil', cat: 'Soleira', qtd: 1, cod: 'RM018', calc: 'L+44', param: pSoleira('RM018','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU121', calc: 'L-26', param: pMarcoSupInf('L','SU123'), esp: '' },
-                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU122', calc: 'L-26', param: pMarcoSupInf('L','SU123'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM060', calc: 'L+24', param: rContramarco('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM068', calc: 'L+24', param: rContramarco('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM060', calc: 'H+24', param: rContramarco('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 1, cod: 'RM005', calc: 'L+24', param: rArremate('L',1), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', param: rArremate('H',1), esp: '' },
+                { mat: 'Perfil', cat: 'Soleira', qtd: 1, cod: 'RM018', calc: 'L+44', param: rSoleira('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU121', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Marco Inferior', qtd: 1, cod: 'SU122', calc: 'L-26', param: rMarcoSupInf('L'), esp: '' },
                 { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU123', calc: 'H', esp: '' },
-                { mat: 'Perfil', cat: 'Mata Junta', qtd: 2, cod: 'SU302', calc: '((H-50)+20)', param: pMataJuntaSequencial('H','SU121','SU122'), esp: '' },
+                { mat: 'Perfil', cat: 'Mata Junta', qtd: 2, cod: 'SU302', calc: '((H-50)+20)', param: rMataJuntaSequencial('H'), esp: '' },
                 { mat: 'Perfil', cat: 'Folha Sup', qtd: 4, cod: 'SU053', calc: '((L-174)/4)', esp: '' },
                 { mat: 'Perfil', cat: 'Folha Inf', qtd: 4, cod: 'SU225', calc: '((L-174)/4)', esp: '' },
-                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', param: pFolhaAltura('H','SU121','SU122'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 3, cod: 'SU040', calc: 'H-50', param: pFolhaAltura('H','SU121','SU122'), esp: '' },
-                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 3, cod: 'SU041', calc: 'H-50', param: pFolhaAltura('H','SU121','SU122'), esp: '' },
+                { mat: 'Perfil', cat: 'Folha Lateral', qtd: 2, cod: 'SU039', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Int)', qtd: 3, cod: 'SU040', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Mão de Amigo (Ext)', qtd: 3, cod: 'SU041', calc: 'H-50', param: rFolhaAltura('H'), esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 8, cod: 'SU102', calc: '((L-174)/4)', esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Altura)', qtd: 8, cod: 'SU102', calc: '((H-50)-102)', esp: '' },
                 { mat: 'Vidro', cat: 'Vidro', qtd: 4, cod: 'Vidro Incolor', calcL: '(((L-174)/4)-6)', calcH: '((H-50)-133)', esp: '6mm' }
@@ -910,10 +924,10 @@
         
         'fixo': {
             'suprema': [
-                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', param: pContramarco('CM200','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', param: pContramarco('CM200','H'), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+24', param: pArremate('RM005','L',1), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', param: pArremate('RM005','H',1), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', param: rContramarco('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', param: rContramarco('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+24', param: rArremate('L',1), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', param: rArremate('H',1), esp: '' },
                 { mat: 'Perfil', cat: 'Marco (L)', qtd: 2, cod: 'SU079', calc: 'L', esp: '' },
                 { mat: 'Perfil', cat: 'Marco (H)', qtd: 2, cod: 'SU079', calc: 'H', esp: '' },
                 { mat: 'Perfil', cat: 'Baguete (Largura)', qtd: 2, cod: 'SU102', calc: '((L-33)-7)', esp: '' },
@@ -925,10 +939,10 @@
         
         'maximar': {
             'suprema': [
-                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', param: pContramarco('CM200','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', param: pContramarco('CM200','H'), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+24', param: pArremate('RM005','L',1), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', param: pArremate('RM005','H',1), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 2, cod: 'CM200', calc: 'L+24', param: rContramarco('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', param: rContramarco('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 2, cod: 'RM005', calc: 'L+24', param: rArremate('L',1), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', param: rArremate('H',1), esp: '' },
                 { mat: 'Perfil', cat: 'Marco (H)', qtd: 2, cod: 'SU079', calc: 'H', esp: '' },
                 { mat: 'Perfil', cat: 'Marco (L)', qtd: 2, cod: 'SU079', calc: 'L', esp: '' },
                 { mat: 'Perfil', cat: 'Pingadeira', qtd: 1, cod: 'SU276', calc: 'L', esp: '' },
@@ -944,10 +958,10 @@
         
         'porta_giro': {
             'suprema': [
-                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM200', calc: 'L+24', param: pContramarco('CM200','L'), esp: '' },
-                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', param: pContramarco('CM200','H'), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 1, cod: 'RM005', calc: 'L+24', param: pArremate('RM005','L',1), esp: '' },
-                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', param: pArremate('RM005','H',1), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Largura)', qtd: 1, cod: 'CM200', calc: 'L+24', param: rContramarco('L'), esp: '' },
+                { mat: 'Perfil', cat: 'Contramarco (Altura)', qtd: 2, cod: 'CM200', calc: 'H+24', param: rContramarco('H'), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Largura)', qtd: 1, cod: 'RM005', calc: 'L+24', param: rArremate('L',1), esp: '' },
+                { mat: 'Perfil', cat: 'Arremate (Altura)', qtd: 2, cod: 'RM005', calc: 'H+24', param: rArremate('H',1), esp: '' },
                 { mat: 'Perfil', cat: 'Marco Lateral', qtd: 2, cod: 'SU279', calc: 'H', esp: '' },
                 { mat: 'Perfil', cat: 'Marco Superior', qtd: 1, cod: 'SU279', calc: 'L', esp: '' },
                 { mat: 'Perfil', cat: 'Batedeira', qtd: 1, cod: '25548', calc: 'H-40', esp: '' },
@@ -1035,7 +1049,7 @@
         if (isNaN(vaoL) || isNaN(vaoH)) {
             return '<div class="calc-preview calc-preview-aviso">preencha o Vão (L/H) pra calcular</div>';
         }
-        const r = item.param(vaoL, vaoH);
+        const r = item.param(item, listaDeItens, vaoL, vaoH);
         if (r && r.valor !== null && !isNaN(r.valor)) {
             const valorArredondado = Math.round(r.valor * 100) / 100;
             if (r.assumido) {
@@ -1145,7 +1159,7 @@
                 row[13] = item.calcH; // H
             } else if (item.param && temVao) {
                 // Motor paramétrico: resolve a fórmula com o catálogo real
-                const r = item.param(vaoL, vaoH);
+                const r = item.param(item, listaDeItens, vaoL, vaoH);
                 if (r && r.valor !== null && !isNaN(r.valor)) {
                     row[10] = Math.round(r.valor * 100) / 100; // COMPRIMENTO calculado
                     if (r.assumido) {
