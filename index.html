@@ -248,6 +248,10 @@
             .input-code { width: 90px; font-weight: bold; color: var(--primary); }
             .input-qtd { width: 50px; text-align: center; }
             .input-calc { width: 150px; }
+            .calc-preview { font-size: 11px; margin-top: 3px; font-weight: bold; }
+            .calc-preview-ok { color: #198754; }
+            .calc-preview-assumido { color: #b45309; }
+            .calc-preview-aviso { color: #999; font-weight: normal; font-style: italic; }
             tbody tr:nth-child(even) { background-color: #f8f9fa; }
             tbody tr:hover { background-color: #e9ecef; }
             .btn-remove:hover { background-color: #ffeeee; border-radius: 4px; }
@@ -387,11 +391,11 @@
             </div>
             <div class="form-group">
                 <label>VÃO - LARGURA / L (mm):</label>
-                <input type="number" id="proj_vaoL" placeholder="Ex: 1500" min="0" onchange="atualizarLinhaProjeto()">
+                <input type="number" id="proj_vaoL" placeholder="Ex: 1500" min="0" onchange="onVaoChange()" oninput="onVaoChange()">
             </div>
             <div class="form-group">
                 <label>VÃO - ALTURA / H (mm):</label>
-                <input type="number" id="proj_vaoH" placeholder="Ex: 1200" min="0" onchange="atualizarLinhaProjeto()">
+                <input type="number" id="proj_vaoH" placeholder="Ex: 1200" min="0" onchange="onVaoChange()" oninput="onVaoChange()">
             </div>
         </div>
         <p style="font-size:12px; color:#888; margin-top:6px;">
@@ -1018,6 +1022,30 @@
         document.getElementById("item_categoria").value = "";
     }
 
+    function onVaoChange() {
+        if (listaDeItens.length > 0) atualizarTabela();
+    }
+
+    // Monta o texto de preview mostrado embaixo do campo de Cálculo:
+    // valor já resolvido pelo catálogo, ou aviso do que falta.
+    function previewValorItem(item) {
+        if (!item.param) return '';
+        const vaoL = parseFloat(document.getElementById("proj_vaoL").value);
+        const vaoH = parseFloat(document.getElementById("proj_vaoH").value);
+        if (isNaN(vaoL) || isNaN(vaoH)) {
+            return '<div class="calc-preview calc-preview-aviso">preencha o Vão (L/H) pra calcular</div>';
+        }
+        const r = item.param(vaoL, vaoH);
+        if (r && r.valor !== null && !isNaN(r.valor)) {
+            const valorArredondado = Math.round(r.valor * 100) / 100;
+            if (r.assumido) {
+                return `<div class="calc-preview calc-preview-assumido">= ${valorArredondado} mm ⚠ (usando valor de família — ${r.refs.join(', ')} sem catálogo próprio)</div>`;
+            }
+            return `<div class="calc-preview calc-preview-ok">= ${valorArredondado} mm ✓ (calculado do catálogo)</div>`;
+        }
+        return `<div class="calc-preview calc-preview-aviso">falta cadastrar ${r && r.refs ? r.refs.join(', ') : item.codigo} no catálogo</div>`;
+    }
+
     function atualizarCampo(id, campo, valor) {
         const index = listaDeItens.findIndex(item => item.id === id);
         if (index !== -1) {
@@ -1056,7 +1084,7 @@
                     </div>
                 `;
             } else {
-                inputMedida = `<input type="text" class="input-calc" value="${item.calculo || ''}" onchange="atualizarCampo(${item.id}, 'calculo', this.value)" placeholder="Ex: L - 24">`;
+                inputMedida = `<input type="text" class="input-calc" value="${item.calculo || ''}" onchange="atualizarCampo(${item.id}, 'calculo', this.value)" placeholder="Ex: L - 24">${previewValorItem(item)}`;
             }
 
             tr.innerHTML = `
@@ -1269,6 +1297,7 @@
                 catalogoPerfis[doc.id] = doc.data();
             });
             renderPerfis();
+            onVaoChange(); // recalcula o preview da tabela de itens, se houver uma tipologia carregada
         }, (error) => {
             console.error("Erro ao ler o catálogo de perfis:", error);
             document.getElementById('tbodyPerfis').innerHTML =
