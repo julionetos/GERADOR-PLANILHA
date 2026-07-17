@@ -1062,9 +1062,25 @@
 
     function atualizarCampo(id, campo, valor) {
         const index = listaDeItens.findIndex(item => item.id === id);
-        if (index !== -1) {
-            listaDeItens[index][campo] = valor;
+        if (index === -1) return;
+
+        listaDeItens[index][campo] = valor;
+
+        // Se o campo editado foi o Código, puxa a Categoria (papel) desse
+        // perfil direto do catálogo, pra não ficar com Código e Categoria
+        // desencontrados na mesma linha.
+        if (campo === 'codigo') {
+            const codigoNormalizado = (valor || '').trim().toUpperCase();
+            const perfilCatalogo = catalogoPerfis[codigoNormalizado];
+            if (perfilCatalogo && perfilCatalogo.categoria) {
+                listaDeItens[index].categoria = perfilCatalogo.categoria;
+            }
         }
+
+        // Reatualiza a tabela pra refletir na hora: preview calculado,
+        // categoria puxada do catálogo, e qualquer outra linha que
+        // dependa desta (ex: Marco Superior depende do Marco Lateral).
+        atualizarTabela();
     }
 
     function removerItem(id) {
@@ -1392,21 +1408,51 @@
     // a partir das tipologias existentes. Serve só para você não ter que digitar
     // os códigos um por um na primeira vez que usar o catálogo.
     const perfisIniciais = [
-        "25548","CM060","CM068","CM200","RM005","RM018","SU001","SU002","SU003",
-        "SU010","SU011","SU012","SU013","SU039","SU040","SU041","SU044","SU049",
-        "SU053","SU079","SU080","SU081","SU102","SU111","SU121","SU122","SU123",
-        "SU225","SU228","SU230","SU276","SU279","SU291","SU302"
+        { cod: "25548", categoria: "Batedeira" },
+        { cod: "CM060", categoria: "Contramarco" },
+        { cod: "CM068", categoria: "Contramarco" },
+        { cod: "CM200", categoria: "Contramarco" },
+        { cod: "RM005", categoria: "Arremate" },
+        { cod: "RM018", categoria: "Soleira" },
+        { cod: "SU001", categoria: "Marco Superior" },
+        { cod: "SU002", categoria: "Marco Inferior" },
+        { cod: "SU003", categoria: "Marco Lateral" },
+        { cod: "SU010", categoria: "Marco Superior" },
+        { cod: "SU011", categoria: "Marco Inferior" },
+        { cod: "SU012", categoria: "Marco Lateral" },
+        { cod: "SU013", categoria: "Marco Lateral" },
+        { cod: "SU039", categoria: "Folha" },
+        { cod: "SU040", categoria: "Mão de Amigo" },
+        { cod: "SU041", categoria: "Mão de Amigo" },
+        { cod: "SU044", categoria: "Folha" },
+        { cod: "SU049", categoria: "Mão de Amigo" },
+        { cod: "SU053", categoria: "Folha" },
+        { cod: "SU079", categoria: "Marco" },
+        { cod: "SU080", categoria: "Travessa" },
+        { cod: "SU081", categoria: "Travessa" },
+        { cod: "SU102", categoria: "Baguete" },
+        { cod: "SU111", categoria: "Baguete" },
+        { cod: "SU121", categoria: "Marco Superior" },
+        { cod: "SU122", categoria: "Marco Inferior" },
+        { cod: "SU123", categoria: "Marco Lateral" },
+        { cod: "SU225", categoria: "Folha" },
+        { cod: "SU228", categoria: "Marco Inferior" },
+        { cod: "SU230", categoria: "Marco Inferior" },
+        { cod: "SU276", categoria: "Pingadeira" },
+        { cod: "SU279", categoria: "Marco Lateral" },
+        { cod: "SU291", categoria: "Mata Junta" },
+        { cod: "SU302", categoria: "Mata Junta" }
     ];
 
     function popularCatalogoInicial() {
-        if (!confirm(`Isso vai criar ${perfisIniciais.length} perfis vazios no catálogo (só os que ainda não existirem). Continuar?`)) return;
+        if (!confirm(`Isso vai criar ${perfisIniciais.length} perfis no catálogo (só os que ainda não existirem), já com a Categoria preenchida. Continuar?`)) return;
 
         const batch = db.batch();
-        perfisIniciais.forEach((cod) => {
+        perfisIniciais.forEach(({ cod, categoria }) => {
             if (!catalogoPerfis[cod]) {
                 const ref = db.collection('perfis').doc(cod);
                 batch.set(ref, {
-                    categoria: '', abaFrontal: null, encaixe: null,
+                    categoria: categoria, abaFrontal: null, encaixe: null,
                     sobreposicao: null, folgaVidro: null, pesoKg: null, cor: ''
                 });
             }
